@@ -4,7 +4,7 @@ import { Color } from 'three';
 import { Ground } from './Ground';
 import { CreatureModel } from './Creatures';
 import { InstancedGrass } from './InstancedGrass';
-import { InstancedFlowers, InstancedMushrooms } from './InstancedPlants';
+import { InstancedFlowers, InstancedFlatFlowers, InstancedMushrooms } from './InstancedPlants';
 import type { World } from '../world/types';
 
 interface SceneProps {
@@ -15,9 +15,10 @@ export function Scene({ world }: SceneProps) {
   const { scene } = useThree();
   const sunPosition = useRef<[number, number, number]>([10, 10, 10]);
   
-  // Sky colors
+  // Sky colors - reuse single Color object to avoid GC pressure
   const dayColor = useMemo(() => new Color('#87CEEB'), []);    // Light blue
   const nightColor = useMemo(() => new Color('#1a1a3e'), []);  // Dark blue
+  const skyColor = useMemo(() => new Color(), []);             // Reusable for interpolation
   
   // Update sun position and sky color based on day phase
   useFrame(() => {
@@ -41,7 +42,7 @@ export function Scene({ world }: SceneProps) {
       brightness = (1 - world.dayPhase) / 0.3;
     }
     
-    const skyColor = new Color().lerpColors(nightColor, dayColor, brightness);
+    skyColor.lerpColors(nightColor, dayColor, brightness);
     scene.background = skyColor;
   });
   
@@ -75,6 +76,11 @@ export function Scene({ world }: SceneProps) {
         worldHeight={world.height} 
       />
       <InstancedFlowers 
+        plants={world.plants} 
+        worldWidth={world.width} 
+        worldHeight={world.height} 
+      />
+      <InstancedFlatFlowers 
         plants={world.plants} 
         worldWidth={world.width} 
         worldHeight={world.height} 

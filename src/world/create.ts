@@ -21,6 +21,7 @@ const creatureColors: Record<Creature['type'], string[]> = {
   snail: ['#deb887', '#d2b48c', '#bc8f8f'],
   butterfly: ['#ffb6c1', '#87ceeb', '#dda0dd', '#f0e68c'],
   caterpillar: ['#7cb342', '#8bc34a', '#9ccc65', '#c5e1a5', '#ffeb3b'],
+  ant: ['#1a1a1a', '#2d1f1f', '#3d2b2b', '#4a3c3c'], // Black, dark brown, reddish-brown
 };
 
 const plantColors: Record<Plant['type'], string[]> = {
@@ -31,11 +32,12 @@ const plantColors: Record<Plant['type'], string[]> = {
   daisy: ['#ffffff', '#fff8dc', '#fffaf0'],
   tulip: ['#e91e63', '#9c27b0', '#ff5722', '#ffeb3b', '#f44336'],
   wildflower: ['#ba68c8', '#7986cb', '#4fc3f7', '#81c784', '#ffb74d'],
+  poppy: ['#e63946', '#ff6b35', '#f77f00', '#ffba08'], // Red, orange, deep orange, golden
 };
 
 export function createCreature(type: Creature['type'], worldWidth: number, worldHeight: number): Creature {
   const colors = creatureColors[type];
-  const sizes = { bug: 4, snail: 6, butterfly: 5, caterpillar: 5 };
+  const sizes: Record<Creature['type'], number> = { bug: 4, snail: 6, butterfly: 5, caterpillar: 5, ant: 2 };
   
   return {
     id: randomId(),
@@ -53,9 +55,10 @@ export function createCreature(type: Creature['type'], worldWidth: number, world
   };
 }
 
-export function createPlant(type: Plant['type'], worldWidth: number, worldHeight: number, pos?: Vector2): Plant {
+export function createPlant(type: Plant['type'], worldWidth: number, worldHeight: number, pos?: Vector2, startSmall?: boolean): Plant {
   const colors = plantColors[type];
-  const maxSizes = { flower: 12, grass: 8, mushroom: 10, blade: 6, daisy: 10, tulip: 14, wildflower: 8 };
+  const maxSizes: Record<Plant['type'], number> = { flower: 12, grass: 8, mushroom: 10, blade: 6, daisy: 10, tulip: 14, wildflower: 8, poppy: 8 };
+  const maxSize = maxSizes[type] + randomInRange(-2, 4);
   
   return {
     id: randomId(),
@@ -63,8 +66,9 @@ export function createPlant(type: Plant['type'], worldWidth: number, worldHeight
       x: randomInRange(30, worldWidth - 30), 
       y: randomInRange(30, worldHeight - 30) 
     },
-    size: randomInRange(1, 3),
-    maxSize: maxSizes[type] + randomInRange(-2, 4),
+    // Start at full size unless explicitly told to start small (for new spawns)
+    size: startSmall ? randomInRange(1, 3) : maxSize * randomInRange(0.8, 1.0),
+    maxSize,
     growthRate: randomInRange(0.002, 0.008),
     color: colors[Math.floor(seededRandom() * colors.length)],
     type,
@@ -78,12 +82,12 @@ export function createWorld(width: number, height: number): World {
   const plants: Plant[] = [];
   
   // Add some bugs
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     creatures.push(createCreature('bug', width, height));
   }
   
   // Add snails
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     creatures.push(createCreature('snail', width, height));
   }
   
@@ -93,8 +97,13 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add caterpillars - crawling on the ground
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     creatures.push(createCreature('caterpillar', width, height));
+  }
+  
+  // Add ants - tiny and quick
+  for (let i = 0; i < 80; i++) {
+    creatures.push(createCreature('ant', width, height));
   }
   
   // Add flowers - scattered naturally
@@ -117,18 +126,39 @@ export function createWorld(width: number, height: number): World {
     plants.push(createPlant('wildflower', width, height));
   }
   
+  // Add poppies - delicate cup-shaped meadow flowers
+  for (let i = 0; i < 10; i++) {
+    plants.push(createPlant('poppy', width, height));
+  }
+  
   // Add grass patches - dense like real nature
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < 270; i++) {
     plants.push(createPlant('grass', width, height));
   }
   
-  // Add mushrooms - clustered in patches
-  for (let i = 0; i < 12; i++) {
+  // Add mushrooms - half scattered, half in patches
+  // Scattered mushrooms
+  for (let i = 0; i < 6; i++) {
     plants.push(createPlant('mushroom', width, height));
+  }
+  // Mushroom patches - 6 patches with 2-3 mushrooms each, loosely grouped
+  for (let patch = 0; patch < 6; patch++) {
+    const patchCenterX = randomInRange(60, width - 60);
+    const patchCenterY = randomInRange(60, height - 60);
+    const mushroomsInPatch = 2 + Math.floor(seededRandom() * 2); // 2-3 per patch
+    for (let m = 0; m < mushroomsInPatch; m++) {
+      const offsetX = randomInRange(-25, 25);
+      const offsetY = randomInRange(-25, 25);
+      const pos = {
+        x: Math.max(30, Math.min(width - 30, patchCenterX + offsetX)),
+        y: Math.max(30, Math.min(height - 30, patchCenterY + offsetY))
+      };
+      plants.push(createPlant('mushroom', width, height, pos));
+    }
   }
   
   // Add single grass blades scattered everywhere
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 180; i++) {
     plants.push(createPlant('blade', width, height));
   }
   

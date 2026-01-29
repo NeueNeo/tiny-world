@@ -36,6 +36,14 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
     roughness: 0.85 
   }), []);
   
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [geometry, material]);
+  
   // Calculate total instances needed
   const grassPlants = plants.filter(p => p.type === 'grass');
   const bladePlants = plants.filter(p => p.type === 'blade');
@@ -57,7 +65,10 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
         const seed = plantIdx * 100 + i;
         const angle = (i / bladesPerClump) * Math.PI * 2 + seededRandom(seed) * 0.5;
         const dist = seededRandom(seed + 1) * 0.08;
-        const height = (0.15 + seededRandom(seed + 2) * 0.35) * scale;
+        // 25% of grass is shorter
+        const isShort = seededRandom(seed + 5) < 0.25;
+        const heightMult = isShort ? 0.5 : 1.0;
+        const height = (0.15 + seededRandom(seed + 2) * 0.35) * scale * heightMult;
         
         data.push({
           x: px + Math.cos(angle) * dist * scale,
@@ -76,7 +87,10 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
       const [px, , pz] = toSceneCoords(plant.pos.x, plant.pos.y, worldWidth, worldHeight);
       const scale = plant.size / 1.2;
       const seed = plantIdx * 1000;
-      const height = (0.2 + seededRandom(seed) * 0.4) * scale;
+      // 25% of blades are shorter
+      const isShort = seededRandom(seed + 5) < 0.25;
+      const heightMult = isShort ? 0.5 : 1.0;
+      const height = (0.2 + seededRandom(seed) * 0.4) * scale * heightMult;
       
       data.push({
         x: px,

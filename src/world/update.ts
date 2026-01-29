@@ -15,8 +15,8 @@ function normalize(v: Vector2): Vector2 {
 }
 
 function updateCreature(creature: Creature, world: World): void {
-  const speeds = { bug: 0.8, snail: 0.2, butterfly: 1.2 };
-  const speed = speeds[creature.type];
+  const speeds: Record<string, number> = { bug: 0.8, snail: 0.2, butterfly: 1.2, caterpillar: 0.3, ant: 1.0 };
+  const speed = speeds[creature.type] ?? 0.3;
   
   creature.stateTimer--;
   
@@ -122,7 +122,7 @@ function updatePlant(plant: Plant, world: World): void {
       y: Math.max(30, Math.min(world.height - 30, plant.pos.y + offset.y))
     };
     if (world.plants.length < 300) {
-      world.plants.push(createPlant(plant.type, world.width, world.height, newPos));
+      world.plants.push(createPlant(plant.type, world.width, world.height, newPos, true));
     }
   }
   

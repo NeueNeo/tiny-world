@@ -148,7 +148,7 @@ export function Butterfly({ creature, worldWidth, worldHeight }: CreatureProps) 
       groupRef.current.position.z = nz;
       
       // Float high above the flowers with gentle bobbing
-      const baseHeight = 1.5 + Math.sin(creature.pos.x * 0.5) * 0.5;
+      const baseHeight = 3 + Math.sin(creature.pos.x * 0.5) * 0.5;
       groupRef.current.position.y = baseHeight + Math.sin(state.clock.elapsedTime * 1.5 + creature.pos.x) * 0.3;
       
       // Gentle body tilt while flying
@@ -366,6 +366,119 @@ export function Caterpillar({ creature, worldWidth, worldHeight }: CreatureProps
   );
 }
 
+export function Ant({ creature, worldWidth, worldHeight }: CreatureProps) {
+  const groupRef = useRef<Group>(null);
+  const [x, , z] = toSceneCoords(creature.pos.x, creature.pos.y, worldWidth, worldHeight);
+  const scale = creature.size / 4; // Very small - smaller than bugs
+  
+  const bodyColor = useMemo(() => new Color(creature.color), [creature.color]);
+  
+  useFrame((state) => {
+    if (groupRef.current) {
+      const [nx, , nz] = toSceneCoords(creature.pos.x, creature.pos.y, worldWidth, worldHeight);
+      groupRef.current.position.x = nx;
+      groupRef.current.position.z = nz;
+      
+      // Face movement direction
+      if (Math.abs(creature.vel.x) > 0.01 || Math.abs(creature.vel.y) > 0.01) {
+        groupRef.current.rotation.y = Math.atan2(creature.vel.x, creature.vel.y);
+      }
+      
+      // Quick scurrying motion - slight bobbing
+      groupRef.current.position.y = 0.01 + Math.sin(state.clock.elapsedTime * 20 + creature.pos.x) * 0.003;
+    }
+  });
+  
+  return (
+    <group ref={groupRef} position={[x, 0.01, z]} scale={scale}>
+      {/* Head - small sphere */}
+      <mesh position={[0, 0.015, 0.045]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.6} />
+      </mesh>
+      
+      {/* Mandibles */}
+      <mesh position={[0.008, 0.01, 0.06]} rotation={[0.3, 0.3, 0]}>
+        <boxGeometry args={[0.004, 0.003, 0.012]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      <mesh position={[-0.008, 0.01, 0.06]} rotation={[0.3, -0.3, 0]}>
+        <boxGeometry args={[0.004, 0.003, 0.012]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      
+      {/* Elbowed antennae - two segments each */}
+      {/* Right antenna - base segment */}
+      <mesh position={[0.012, 0.025, 0.05]} rotation={[0.8, 0.4, 0]}>
+        <cylinderGeometry args={[0.002, 0.002, 0.025, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      {/* Right antenna - tip segment (elbowed) */}
+      <mesh position={[0.022, 0.04, 0.06]} rotation={[0.2, 0, 0.5]}>
+        <cylinderGeometry args={[0.0015, 0.0015, 0.02, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      {/* Left antenna - base segment */}
+      <mesh position={[-0.012, 0.025, 0.05]} rotation={[0.8, -0.4, 0]}>
+        <cylinderGeometry args={[0.002, 0.002, 0.025, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      {/* Left antenna - tip segment (elbowed) */}
+      <mesh position={[-0.022, 0.04, 0.06]} rotation={[0.2, 0, -0.5]}>
+        <cylinderGeometry args={[0.0015, 0.0015, 0.02, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      
+      {/* Thorax - middle segment, slightly elongated */}
+      <mesh position={[0, 0.018, 0.015]}>
+        <sphereGeometry args={[0.022, 8, 8]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.6} />
+      </mesh>
+      
+      {/* Petiole - narrow waist connecting thorax to abdomen */}
+      <mesh position={[0, 0.015, -0.01]}>
+        <sphereGeometry args={[0.008, 6, 6]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.6} />
+      </mesh>
+      
+      {/* Abdomen/Gaster - larger oval at back */}
+      <mesh position={[0, 0.02, -0.045]}>
+        <sphereGeometry args={[0.03, 10, 8]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.5} />
+      </mesh>
+      
+      {/* 6 legs - 3 pairs attached to thorax */}
+      {/* Front legs */}
+      <mesh position={[0.018, 0, 0.025]} rotation={[0.2, 0.3, 0.8]}>
+        <cylinderGeometry args={[0.002, 0.0015, 0.035, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      <mesh position={[-0.018, 0, 0.025]} rotation={[0.2, -0.3, -0.8]}>
+        <cylinderGeometry args={[0.002, 0.0015, 0.035, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      {/* Middle legs */}
+      <mesh position={[0.022, 0, 0.012]} rotation={[0, 0, 0.9]}>
+        <cylinderGeometry args={[0.002, 0.0015, 0.04, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      <mesh position={[-0.022, 0, 0.012]} rotation={[0, 0, -0.9]}>
+        <cylinderGeometry args={[0.002, 0.0015, 0.04, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      {/* Back legs */}
+      <mesh position={[0.018, 0, -0.005]} rotation={[-0.3, -0.3, 0.7]}>
+        <cylinderGeometry args={[0.002, 0.0015, 0.045, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+      <mesh position={[-0.018, 0, -0.005]} rotation={[-0.3, 0.3, -0.7]}>
+        <cylinderGeometry args={[0.002, 0.0015, 0.045, 4]} />
+        <meshStandardMaterial color={bodyColor} />
+      </mesh>
+    </group>
+  );
+}
+
 export function CreatureModel({ creature, worldWidth, worldHeight }: CreatureProps) {
   switch (creature.type) {
     case 'bug':
@@ -376,6 +489,8 @@ export function CreatureModel({ creature, worldWidth, worldHeight }: CreaturePro
       return <Butterfly creature={creature} worldWidth={worldWidth} worldHeight={worldHeight} />;
     case 'caterpillar':
       return <Caterpillar creature={creature} worldWidth={worldWidth} worldHeight={worldHeight} />;
+    case 'ant':
+      return <Ant creature={creature} worldWidth={worldWidth} worldHeight={worldHeight} />;
     default:
       return null;
   }
