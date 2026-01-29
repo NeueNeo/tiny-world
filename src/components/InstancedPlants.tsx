@@ -1,0 +1,256 @@
+import { useRef, useMemo, useEffect } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { 
+  InstancedMesh, 
+  Object3D, 
+  Color, 
+  CylinderGeometry,
+  SphereGeometry,
+  MeshStandardMaterial,
+  DoubleSide
+} from 'three';
+import type { Plant } from '../world/types';
+
+interface InstancedPlantsProps {
+  plants: Plant[];
+  worldWidth: number;
+  worldHeight: number;
+}
+
+function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: number): [number, number, number] {
+  const sceneX = (x / worldWidth - 0.5) * 21;
+  const sceneZ = (y / worldHeight - 0.5) * 21;
+  return [sceneX, 0, sceneZ];
+}
+
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+// Instanced Flowers with actual petals - base-anchored wind animation
+export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedPlantsProps) {
+  const stemRef = useRef<InstancedMesh>(null);
+  const centerRef = useRef<InstancedMesh>(null);
+  const petalRefs = [
+    useRef<InstancedMesh>(null),
+    useRef<InstancedMesh>(null),
+    useRef<InstancedMesh>(null),
+    useRef<InstancedMesh>(null),
+    useRef<InstancedMesh>(null),
+  ];
+  const dummy = useMemo(() => new Object3D(), []);
+  
+  const flowerPlants = useMemo(() => 
+    plants.filter(p => p.type === 'flower' || p.type === 'daisy' || p.type === 'tulip' || p.type === 'wildflower'),
+    [plants]
+  );
+  
+  // Stem height for calculating flower head position
+  const STEM_HEIGHT = 1.6;
+  
+  // Shared geometries - stem pivots at base
+  const stemGeom = useMemo(() => {
+    const geom = new CylinderGeometry(0.02, 0.03, STEM_HEIGHT, 6);
+    geom.translate(0, STEM_HEIGHT / 2, 0); // Pivot at bottom
+    return geom;
+  }, []);
+  const centerGeom = useMemo(() => new SphereGeometry(0.08, 8, 8), []);
+  const petalGeom = useMemo(() => new SphereGeometry(0.12, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), []);
+  
+  // Materials
+  const stemMat = useMemo(() => new MeshStandardMaterial({ color: '#2d5a27', roughness: 0.8 }), []);
+  const centerMat = useMemo(() => new MeshStandardMaterial({ color: '#ffd93d', roughness: 0.5 }), []);
+  const petalMat = useMemo(() => new MeshStandardMaterial({ roughness: 0.6, side: DoubleSide }), []);
+  
+  // Pre-calculate flower data
+  const flowerData = useMemo(() => {
+    return flowerPlants.map((plant, i) => {
+      const [x, , z] = toSceneCoords(plant.pos.x, plant.pos.y, worldWidth, worldHeight);
+      const scale = plant.size / 6;
+      return {
+        x, z, scale,
+        color: new Color(plant.color),
+        seed: i,
+      };
+    });
+  }, [flowerPlants, worldWidth, worldHeight]);
+  
+  // Set initial transforms
+  useEffect(() => {
+    if (!stemRef.current || !centerRef.current) return;
+    
+    flowerData.forEach((f, i) => {
+      const stemTop = STEM_HEIGHT * f.scale;
+      const headY = stemTop + 0.05 * f.scale;
+      
+      // Stem at ground level
+      dummy.position.set(f.x, 0, f.z);
+      dummy.scale.set(f.scale, f.scale, f.scale);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      stemRef.current!.setMatrixAt(i, dummy.matrix);
+      
+      // Center directly on top of stem
+      dummy.position.set(f.x, headY, f.z);
+      dummy.scale.set(f.scale, f.scale, f.scale);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      centerRef.current!.setMatrixAt(i, dummy.matrix);
+      
+      // 5 petals arranged in a circle around center
+      for (let p = 0; p < 5; p++) {
+        const angle = (p / 5) * Math.PI * 2;
+        const px = f.x + Math.cos(angle) * 0.15 * f.scale;
+        const pz = f.z + Math.sin(angle) * 0.15 * f.scale;
+        
+        dummy.position.set(px, headY, pz);
+        dummy.scale.set(f.scale, f.scale, f.scale);
+        dummy.rotation.set(0.3, angle, 0);
+        dummy.updateMatrix();
+        petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
+        petalRefs[p].current!.setColorAt(i, f.color);
+      }
+    });
+    
+    stemRef.current.instanceMatrix.needsUpdate = true;
+    centerRef.current.instanceMatrix.needsUpdate = true;
+    petalRefs.forEach(ref => {
+      if (ref.current) {
+        ref.current.instanceMatrix.needsUpdate = true;
+        if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
+      }
+    });
+  }, [flowerData, dummy]);
+  
+  // Animate wind - base anchored, tops sway
+  useFrame((state) => {
+    if (!stemRef.current || !centerRef.current) return;
+    
+    const time = state.clock.elapsedTime;
+    
+    flowerData.forEach((f, i) => {
+      // Wind sway - similar to grass but gentler for flowers
+      const rotX = Math.sin(time * 0.8 + f.x * 2 + f.z * 3) * 0.06; // rotation around X axis
+      const rotZ = Math.sin(time * 1.0 + f.x * 3 + f.z * 2) * 0.06; // rotation around Z axis
+      
+      const stemTop = STEM_HEIGHT * f.scale;
+      
+      // Stem rotates from base
+      dummy.position.set(f.x, 0, f.z);
+      dummy.scale.set(f.scale, f.scale, f.scale);
+      dummy.rotation.set(rotX, 0, rotZ);
+      dummy.updateMatrix();
+      stemRef.current!.setMatrixAt(i, dummy.matrix);
+      
+      // Calculate where stem tip ends up after rotation (Euler XYZ order)
+      // Local tip at (0, stemTop, 0) transformed by rotation
+      const cosX = Math.cos(rotX);
+      const sinX = Math.sin(rotX);
+      const cosZ = Math.cos(rotZ);
+      const sinZ = Math.sin(rotZ);
+      
+      // After X rotation: (0, stemTop*cosX, stemTop*sinX)
+      // After Z rotation: (-stemTop*cosX*sinZ, stemTop*cosX*cosZ, stemTop*sinX)
+      const tipLocalX = -stemTop * cosX * sinZ;
+      const tipLocalY = stemTop * cosX * cosZ;
+      const tipLocalZ = stemTop * sinX;
+      
+      const headX = f.x + tipLocalX;
+      const headY = tipLocalY + 0.05 * f.scale;
+      const headZ = f.z + tipLocalZ;
+      
+      // Center at stem tip
+      dummy.position.set(headX, headY, headZ);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      centerRef.current!.setMatrixAt(i, dummy.matrix);
+      
+      // Petals follow center
+      for (let p = 0; p < 5; p++) {
+        const angle = (p / 5) * Math.PI * 2;
+        const px = headX + Math.cos(angle) * 0.15 * f.scale;
+        const pz = headZ + Math.sin(angle) * 0.15 * f.scale;
+        
+        dummy.position.set(px, headY, pz);
+        dummy.scale.set(f.scale, f.scale, f.scale);
+        dummy.rotation.set(0.3, angle, 0);
+        dummy.updateMatrix();
+        petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
+      }
+    });
+    
+    stemRef.current.instanceMatrix.needsUpdate = true;
+    centerRef.current.instanceMatrix.needsUpdate = true;
+    petalRefs.forEach(ref => {
+      if (ref.current) ref.current.instanceMatrix.needsUpdate = true;
+    });
+  });
+  
+  if (flowerData.length === 0) return null;
+  
+  return (
+    <>
+      <instancedMesh ref={stemRef} args={[stemGeom, stemMat, flowerData.length]} frustumCulled />
+      <instancedMesh ref={centerRef} args={[centerGeom, centerMat, flowerData.length]} frustumCulled />
+      {petalRefs.map((ref, i) => (
+        <instancedMesh key={i} ref={ref} args={[petalGeom, petalMat, flowerData.length]} frustumCulled />
+      ))}
+    </>
+  );
+}
+
+// Instanced Mushrooms
+export function InstancedMushrooms({ plants, worldWidth, worldHeight }: InstancedPlantsProps) {
+  const stemRef = useRef<InstancedMesh>(null);
+  const capRef = useRef<InstancedMesh>(null);
+  const dummy = useMemo(() => new Object3D(), []);
+  
+  const mushrooms = useMemo(() => plants.filter(p => p.type === 'mushroom'), [plants]);
+  
+  const stemGeom = useMemo(() => new CylinderGeometry(0.04, 0.06, 0.3, 8), []);
+  const capGeom = useMemo(() => new SphereGeometry(0.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), []);
+  
+  const stemMat = useMemo(() => new MeshStandardMaterial({ color: '#f5f5dc', roughness: 0.7 }), []);
+  const capMat = useMemo(() => new MeshStandardMaterial({ roughness: 0.6 }), []);
+  
+  const mushroomData = useMemo(() => {
+    return mushrooms.map((plant) => {
+      const [x, , z] = toSceneCoords(plant.pos.x, plant.pos.y, worldWidth, worldHeight);
+      const scale = plant.size / 12;
+      return { x, z, scale, color: new Color(plant.color) };
+    });
+  }, [mushrooms, worldWidth, worldHeight]);
+  
+  useEffect(() => {
+    if (!stemRef.current || !capRef.current) return;
+    
+    mushroomData.forEach((m, i) => {
+      // Stem
+      dummy.position.set(m.x, 0.15 * m.scale, m.z);
+      dummy.scale.set(m.scale, m.scale, m.scale);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      stemRef.current!.setMatrixAt(i, dummy.matrix);
+      
+      // Cap
+      dummy.position.set(m.x, 0.35 * m.scale, m.z);
+      dummy.updateMatrix();
+      capRef.current!.setMatrixAt(i, dummy.matrix);
+      capRef.current!.setColorAt(i, m.color);
+    });
+    
+    stemRef.current.instanceMatrix.needsUpdate = true;
+    capRef.current.instanceMatrix.needsUpdate = true;
+    if (capRef.current.instanceColor) capRef.current.instanceColor.needsUpdate = true;
+  }, [mushroomData, dummy]);
+  
+  if (mushroomData.length === 0) return null;
+  
+  return (
+    <>
+      <instancedMesh ref={stemRef} args={[stemGeom, stemMat, mushroomData.length]} frustumCulled />
+      <instancedMesh ref={capRef} args={[capGeom, capMat, mushroomData.length]} frustumCulled />
+    </>
+  );
+}
