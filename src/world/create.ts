@@ -40,7 +40,7 @@ const plantColors: Record<Plant['type'], string[]> = {
 
 export function createCreature(type: Creature['type'], worldWidth: number, worldHeight: number): Creature {
   const colors = creatureColors[type];
-  const sizes: Record<Creature['type'], number> = { bug: 4, snail: 6, butterfly: 5, caterpillar: 5, ant: 2.1, dragonfly: 6, bee: 3 };
+  const sizes: Record<Creature['type'], number> = { bug: 4, snail: 6, butterfly: 5, caterpillar: 5, ant: 2.2, dragonfly: 6, bee: 3 };
   
   return {
     id: randomId(),
