@@ -529,13 +529,19 @@ export function InstancedSnails({ creatures, worldWidth, worldHeight }: Instance
     };
   }, [geometries, shellMaterial, bodyMaterial, eyeMaterial]);
   
+  // Snails are slow - 30fps animation is plenty
+  const snailFrameRef = useRef(0);
   useFrame(() => {
+    snailFrameRef.current++;
+    if (snailFrameRef.current % 2 !== 0) return;
     if (!shellRef.current || !bodyRef.current || !eyeStalksRef.current || !eyesRef.current) return;
     
     let stalkIndex = 0;
     let eyeIndex = 0;
+    const len = snails.length;
     
-    snails.forEach((snail, i) => {
+    for (let i = 0; i < len; i++) {
+      const snail = snails[i];
       const [x, , z] = toSceneCoords(snail.pos.x, snail.pos.y, worldWidth, worldHeight);
       const scale = snail.size / 6;
       const rotation = Math.atan2(snail.vel.x, snail.vel.y);
@@ -564,7 +570,8 @@ export function InstancedSnails({ creatures, worldWidth, worldHeight }: Instance
       bodyRef.current!.setMatrixAt(i, dummy.matrix);
       
       // Eye stalks - 2 per snail
-      [-1, 1].forEach((side) => {
+      for (let s = 0; s < 2; s++) {
+        const side = s === 0 ? -1 : 1;
         dummy.position.set(
           x + Math.sin(rotation) * 0.1 * scale + Math.cos(rotation) * 0.02 * side * scale,
           baseY + 0.06 * scale,
@@ -584,8 +591,8 @@ export function InstancedSnails({ creatures, worldWidth, worldHeight }: Instance
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
         eyesRef.current!.setMatrixAt(eyeIndex++, dummy.matrix);
-      });
-    });
+      }
+    }
     
     shellRef.current.instanceMatrix.needsUpdate = true;
     bodyRef.current.instanceMatrix.needsUpdate = true;
