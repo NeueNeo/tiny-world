@@ -68,7 +68,7 @@ function App() {
         dpr={[1, 1.5]} // Limit pixel ratio for performance
         camera={{ position: [0, 8, 12], fov: 60 }}
         style={{ background: '#1a1a2e' }}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <WorldUpdater world={worldRef.current} isPaused={isPaused} />
         <Scene world={worldRef.current} rainOverride={rainOverride} />
