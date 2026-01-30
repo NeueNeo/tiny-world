@@ -56,7 +56,11 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
     geom.scale(1, 0.5, 1); // Flatten into oval like wildflowers
     return geom;
   }, []);
-  const petalGeom = useMemo(() => new SphereGeometry(0.12, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), []);
+  const petalGeom = useMemo(() => {
+    const geom = new SphereGeometry(0.12, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    geom.scale(1, 0.4, 1); // Flatten into oval
+    return geom;
+  }, []);
   
   // Materials
   const stemMat = useMemo(() => new MeshStandardMaterial({ color: '#2d5a27', roughness: 0.8 }), []);
