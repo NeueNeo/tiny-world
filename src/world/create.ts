@@ -145,7 +145,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add grass patches - dense like real nature
-  for (let i = 0; i < 270; i++) {
+  for (let i = 0; i < 350; i++) {
     plants.push(createPlant('grass', width, height));
   }
   
@@ -171,7 +171,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add single grass blades scattered everywhere
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 220; i++) {
     plants.push(createPlant('blade', width, height));
   }
   
