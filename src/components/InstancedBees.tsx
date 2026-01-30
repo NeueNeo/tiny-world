@@ -93,13 +93,18 @@ export function InstancedBees({ creatures, worldWidth, worldHeight }: InstancedB
     };
   }, [geometries, headMaterial, thoraxMaterial, abdomenMaterial, stripeMaterial, wingMaterial]);
   
+  // Reusable color object to avoid allocations
+  const tempColor = useMemo(() => new Color(), []);
+  
   // Animate bees
   useFrame((state) => {
     if (!headRef.current || !thoraxRef.current || !abdomenRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const len = bees.length;
     
-    bees.forEach((bee, i) => {
+    for (let i = 0; i < len; i++) {
+      const bee = bees[i];
       const [x, , z] = toSceneCoords(bee.pos.x, bee.pos.y, worldWidth, worldHeight);
       const scale = bee.size / 3;
       const rotation = Math.atan2(bee.vel.x, bee.vel.y);
@@ -113,7 +118,7 @@ export function InstancedBees({ creatures, worldWidth, worldHeight }: InstancedB
       const wobbleX = Math.sin(time * 6 + i * 2) * 0.1;
       const wobbleZ = Math.cos(time * 7 + i * 3) * 0.08;
       
-      const bodyColor = new Color(bee.color);
+      tempColor.set(bee.color);
       
       // Head - front
       dummy.position.set(
@@ -143,7 +148,7 @@ export function InstancedBees({ creatures, worldWidth, worldHeight }: InstancedB
       dummy.scale.set(scale * 0.9, scale * 0.8, scale * 1.1); // Slightly elongated
       dummy.updateMatrix();
       abdomenRef.current!.setMatrixAt(i, dummy.matrix);
-      abdomenRef.current!.setColorAt(i, bodyColor);
+      abdomenRef.current!.setColorAt(i, tempColor);
       
       // Black stripe on abdomen
       dummy.position.set(
@@ -173,7 +178,7 @@ export function InstancedBees({ creatures, worldWidth, worldHeight }: InstancedB
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       wingRRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     // Update matrices
     headRef.current.instanceMatrix.needsUpdate = true;
