@@ -31,7 +31,7 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
     const geom = new BufferGeometry();
     
     const bottomWidth = 0.02;
-    const topWidth = 0.005; // Thinner at top
+    const topWidth = 0.0067; // 3x thinner at top
     const height = 1;
     
     // Two triangles forming a tapered quad
