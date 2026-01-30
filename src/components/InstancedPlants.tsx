@@ -106,7 +106,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
       dummy.updateMatrix();
       centerRef.current!.setMatrixAt(i, dummy.matrix);
       
-      // 5 petals arranged in a circle around center
+      // 5 petals arranged radially around center (flat plane like wildflowers)
       for (let p = 0; p < 5; p++) {
         const angle = (p / 5) * Math.PI * 2;
         const px = f.x + Math.cos(angle) * 0.15 * f.scale;
@@ -114,7 +114,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
         
         dummy.position.set(px, headY, pz);
         dummy.scale.set(f.scale, f.scale, f.scale);
-        dummy.rotation.set(0.3, angle, 0);
+        dummy.rotation.set(0, angle, 0);
         dummy.updateMatrix();
         petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
         petalRefs[p].current!.setColorAt(i, f.color);
@@ -176,7 +176,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
       dummy.updateMatrix();
       centerRef.current!.setMatrixAt(i, dummy.matrix);
       
-      // Petals follow center
+      // Petals follow center (radially flat like wildflowers)
       for (let p = 0; p < 5; p++) {
         const angle = (p / 5) * Math.PI * 2;
         const px = headX + Math.cos(angle) * 0.15 * f.scale;
@@ -184,7 +184,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
         
         dummy.position.set(px, headY, pz);
         dummy.scale.set(f.scale, f.scale, f.scale);
-        dummy.rotation.set(0.3, angle, 0);
+        dummy.rotation.set(0, angle, 0);
         dummy.updateMatrix();
         petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
       }
