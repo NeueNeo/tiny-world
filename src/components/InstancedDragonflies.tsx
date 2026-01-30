@@ -123,14 +123,13 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       const scale = df.size / 5;
       const rotation = Math.atan2(df.vel.x, df.vel.y);
       
-      // Hover height with bobbing
-      const baseHeight = 2.5 + Math.sin(df.pos.x * 0.3) * 0.8;
-      const hover = Math.sin(time * 2.5 + i * 2) * 0.15;
-      const y = baseHeight + hover;
+      // Stable hover height per dragonfly (based on index, not position)
+      const baseHeight = 2.2 + (i % 4) * 0.2;
+      const y = baseHeight;
       
-      // Slight body tilt during hover
-      const tiltX = Math.sin(time * 1.8 + i) * 0.1;
-      const tiltZ = Math.cos(time * 2.2 + i * 1.5) * 0.08;
+      // Minimal body tilt
+      const tiltX = Math.sin(time * 1.2 + i) * 0.03;
+      const tiltZ = Math.cos(time * 1.2 + i * 1.5) * 0.03;
       
       tempColor.set(df.color);
       
