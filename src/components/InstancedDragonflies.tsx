@@ -107,13 +107,18 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
     };
   }, [geometries, bodyMaterial, eyeMaterial, wingMaterial]);
   
+  // Reusable color object
+  const tempColor = useMemo(() => new Color(), []);
+  
   // Animate dragonflies
   useFrame((state) => {
     if (!headRef.current || !thoraxRef.current || !abdomenRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const len = dragonflies.length;
     
-    dragonflies.forEach((df, i) => {
+    for (let i = 0; i < len; i++) {
+      const df = dragonflies[i];
       const [x, , z] = toSceneCoords(df.pos.x, df.pos.y, worldWidth, worldHeight);
       const scale = df.size / 5;
       const rotation = Math.atan2(df.vel.x, df.vel.y);
@@ -127,7 +132,7 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       const tiltX = Math.sin(time * 1.8 + i) * 0.1;
       const tiltZ = Math.cos(time * 2.2 + i * 1.5) * 0.08;
       
-      const color = new Color(df.color);
+      tempColor.set(df.color);
       
       // Head - front of body
       dummy.position.set(
@@ -139,7 +144,7 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       headRef.current!.setMatrixAt(i, dummy.matrix);
-      headRef.current!.setColorAt(i, color);
+      headRef.current!.setColorAt(i, tempColor);
       
       // Eyes - large, on sides of head
       const headX = x + Math.sin(rotation) * 0.08 * scale;
@@ -170,7 +175,7 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       thoraxRef.current!.setMatrixAt(i, dummy.matrix);
-      thoraxRef.current!.setColorAt(i, color);
+      thoraxRef.current!.setColorAt(i, tempColor);
       
       // Abdomen - long, thin, extends back (geometry pre-rotated to extend along Z)
       dummy.position.set(
@@ -182,7 +187,7 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       abdomenRef.current!.setMatrixAt(i, dummy.matrix);
-      abdomenRef.current!.setColorAt(i, color);
+      abdomenRef.current!.setColorAt(i, tempColor);
       
       // Abdomen tip
       dummy.position.set(
@@ -194,7 +199,7 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       abdomenTipRef.current!.setMatrixAt(i, dummy.matrix);
-      abdomenTipRef.current!.setColorAt(i, color);
+      abdomenTipRef.current!.setColorAt(i, tempColor);
       
       // Wings attach to thorax, extend perpendicular to body (left & right)
       // Wing geometry extends along +X from origin, flat in XZ plane
@@ -234,7 +239,7 @@ export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: Ins
       dummy.scale.setScalar(scale * 0.9);
       dummy.updateMatrix();
       wingBRRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     // Update all matrices
     headRef.current.instanceMatrix.needsUpdate = true;
