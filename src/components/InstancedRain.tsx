@@ -83,9 +83,13 @@ export function InstancedRain({
   useFrame((state) => {
     if (!meshRef.current) return;
     
-    rainData.forEach((drop, i) => {
+    const elapsed = state.clock.elapsedTime;
+    const windX = Math.sin(elapsed * 0.3) * 0.5;
+    const len = rainData.length;
+    
+    for (let i = 0; i < len; i++) {
+      const drop = rainData[i];
       // Calculate current Y position with wrapping
-      const elapsed = state.clock.elapsedTime;
       let y = drop.startY - (elapsed * drop.speed) % 25;
       
       // Wrap around when below ground
@@ -93,15 +97,12 @@ export function InstancedRain({
         y += 25;
       }
       
-      // Slight wind drift
-      const windX = Math.sin(elapsed * 0.3) * 0.5;
-      
       dummy.position.set(drop.x + windX, y, drop.z);
       dummy.rotation.set(0.1, 0, 0); // Slight angle for motion blur effect
       dummy.scale.set(1, 1, 1);
       dummy.updateMatrix();
       meshRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     meshRef.current.instanceMatrix.needsUpdate = true;
   });
