@@ -76,8 +76,10 @@ export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedC
         !abdomenRef.current || !legsRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const antLen = ants.length;
     
-    ants.forEach((ant, i) => {
+    for (let i = 0; i < antLen; i++) {
+      const ant = ants[i];
       const [x, , z] = toSceneCoords(ant.pos.x, ant.pos.y, worldWidth, worldHeight);
       const scale = ant.size / 4;
       const rotation = Math.atan2(ant.vel.x, ant.vel.y);
@@ -119,7 +121,7 @@ export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedC
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       abdomenRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     headRef.current.instanceMatrix.needsUpdate = true;
     thoraxRef.current.instanceMatrix.needsUpdate = true;
@@ -128,7 +130,8 @@ export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedC
     
     // Legs - 6 per ant = count * 6 instances
     let legIndex = 0;
-    ants.forEach((ant) => {
+    for (let i = 0; i < antLen; i++) {
+      const ant = ants[i];
       const [x, , z] = toSceneCoords(ant.pos.x, ant.pos.y, worldWidth, worldHeight);
       const scale = ant.size / 4;
       const rotation = Math.atan2(ant.vel.x, ant.vel.y);
@@ -145,7 +148,8 @@ export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedC
         { angle: 0.3, zOff: -0.005, rot: -0.7 },
       ];
       
-      legOffsets.forEach((leg) => {
+      for (let l = 0; l < 6; l++) {
+        const leg = legOffsets[l];
         const legX = x + Math.sin(rotation + leg.angle) * 0.02 * scale;
         const legZ = z + Math.cos(rotation + leg.angle) * leg.zOff * scale;
         
@@ -154,8 +158,8 @@ export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedC
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
         legsRef.current!.setMatrixAt(legIndex++, dummy.matrix);
-      });
-    });
+      }
+    }
     
     legsRef.current.instanceMatrix.needsUpdate = true;
   });
