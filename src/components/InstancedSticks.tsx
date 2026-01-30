@@ -47,6 +47,7 @@ export function InstancedSticks({
   const crookedRef = useRef<InstancedMesh>(null);
   const thinStraightRef = useRef<InstancedMesh>(null);
   const thinBentRef = useRef<InstancedMesh>(null);
+  const tinyRef = useRef<InstancedMesh>(null);
   const knotRef = useRef<InstancedMesh>(null);
   const dummy = useMemo(() => new Object3D(), []);
   
@@ -106,6 +107,17 @@ export function InstancedSticks({
     return createStickGeometry(points, 0.006);
   }, []);
   
+  // Tiny twig - very small and thin
+  const tinyGeom = useMemo(() => {
+    const points = [
+      new Vector3(-0.3, 0, 0),
+      new Vector3(-0.05, 0.01, 0),
+      new Vector3(0.15, -0.005, 0),
+      new Vector3(0.3, 0.005, 0),
+    ];
+    return createStickGeometry(points, 0.004);
+  }, []);
+  
   // Knot/node geometry
   const knotGeom = useMemo(() => new SphereGeometry(0.028, 5, 4), []);
   
@@ -122,10 +134,11 @@ export function InstancedSticks({
       crookedGeom.dispose();
       thinStraightGeom.dispose();
       thinBentGeom.dispose();
+      tinyGeom.dispose();
       knotGeom.dispose();
       material.dispose();
     };
-  }, [straightGeom, bentGeom, crookedGeom, thinStraightGeom, thinBentGeom, knotGeom, material]);
+  }, [straightGeom, bentGeom, crookedGeom, thinStraightGeom, thinBentGeom, tinyGeom, knotGeom, material]);
   
   // Distribute sticks among the types
   const stickData = useMemo(() => {
@@ -134,6 +147,7 @@ export function InstancedSticks({
     const crooked: { x: number; z: number; rotY: number; scale: number; color: Color }[] = [];
     const thinStraight: { x: number; z: number; rotY: number; scale: number; color: Color }[] = [];
     const thinBent: { x: number; z: number; rotY: number; scale: number; color: Color }[] = [];
+    const tiny: { x: number; z: number; rotY: number; scale: number; color: Color }[] = [];
     const knots: { x: number; z: number; scale: number; color: Color }[] = [];
     
     for (let i = 0; i < count; i++) {
@@ -150,11 +164,11 @@ export function InstancedSticks({
       const color = new Color(stickColors[colorIdx]);
       color.offsetHSL(0, (seededRandom(s + 5) - 0.5) * 0.08, (seededRandom(s + 6) - 0.5) * 0.1);
       
-      // Pick stick type: 25% straight, 25% bent, 15% crooked, 20% thin straight, 15% thin bent
+      // Pick stick type: 22% straight, 22% bent, 14% crooked, 18% thin straight, 12% thin bent, 12% tiny
       const typeRoll = seededRandom(s + 7);
-      if (typeRoll < 0.25) {
+      if (typeRoll < 0.22) {
         straight.push({ x, z, rotY, scale, color });
-      } else if (typeRoll < 0.50) {
+      } else if (typeRoll < 0.44) {
         bent.push({ x, z, rotY, scale, color });
         // Add knot at bend point sometimes
         if (seededRandom(s + 8) > 0.5) {
@@ -167,7 +181,7 @@ export function InstancedSticks({
             color: color.clone() 
           });
         }
-      } else if (typeRoll < 0.65) {
+      } else if (typeRoll < 0.58) {
         crooked.push({ x, z, rotY, scale, color });
         // Crooked sticks often have knots
         if (seededRandom(s + 9) > 0.3) {
@@ -180,14 +194,17 @@ export function InstancedSticks({
             color: color.clone() 
           });
         }
-      } else if (typeRoll < 0.85) {
+      } else if (typeRoll < 0.76) {
         thinStraight.push({ x, z, rotY, scale: scale * 1.1, color });
-      } else {
+      } else if (typeRoll < 0.88) {
         thinBent.push({ x, z, rotY, scale: scale * 1.0, color });
+      } else {
+        // Tiny twigs - smaller scale
+        tiny.push({ x, z, rotY, scale: scale * 0.6, color });
       }
     }
     
-    return { straight, bent, crooked, thinStraight, thinBent, knots };
+    return { straight, bent, crooked, thinStraight, thinBent, tiny, knots };
   }, [count, seed]);
   
   // Set transforms
@@ -262,6 +279,20 @@ export function InstancedSticks({
       if (thinBentRef.current.instanceColor) thinBentRef.current.instanceColor.needsUpdate = true;
     }
     
+    // Tiny twigs
+    if (tinyRef.current) {
+      stickData.tiny.forEach((stick, i) => {
+        dummy.position.set(stick.x, 0.008, stick.z);
+        dummy.rotation.set(0, stick.rotY, 0);
+        dummy.scale.setScalar(stick.scale);
+        dummy.updateMatrix();
+        tinyRef.current!.setMatrixAt(i, dummy.matrix);
+        tinyRef.current!.setColorAt(i, stick.color);
+      });
+      tinyRef.current.instanceMatrix.needsUpdate = true;
+      if (tinyRef.current.instanceColor) tinyRef.current.instanceColor.needsUpdate = true;
+    }
+    
     // Knots
     if (knotRef.current && stickData.knots.length > 0) {
       stickData.knots.forEach((knot, i) => {
@@ -295,6 +326,9 @@ export function InstancedSticks({
       )}
       {stickData.thinBent.length > 0 && (
         <instancedMesh ref={thinBentRef} args={[thinBentGeom, material, stickData.thinBent.length]} frustumCulled receiveShadow castShadow />
+      )}
+      {stickData.tiny.length > 0 && (
+        <instancedMesh ref={tinyRef} args={[tinyGeom, material, stickData.tiny.length]} frustumCulled receiveShadow castShadow />
       )}
       {stickData.knots.length > 0 && (
         <instancedMesh ref={knotRef} args={[knotGeom, material, stickData.knots.length]} frustumCulled receiveShadow />
