@@ -109,14 +109,14 @@ export function InstancedBees({ creatures, worldWidth, worldHeight }: InstancedB
       const scale = bee.size / 3;
       const rotation = Math.atan2(bee.vel.x, bee.vel.y);
       
-      // Hover height with quick bobbing (bees buzz erratically)
+      // Hover height with gentle bobbing
       const baseHeight = 1.5 + Math.sin(bee.pos.x * 0.5 + bee.pos.y * 0.3) * 0.5;
-      const hover = Math.sin(time * 8 + i * 3) * 0.08 + Math.sin(time * 12 + i * 5) * 0.04;
+      const hover = Math.sin(time * 5 + i * 3) * 0.03 + Math.sin(time * 8 + i * 5) * 0.02;
       const y = baseHeight + hover;
       
-      // Slight wobble
-      const wobbleX = Math.sin(time * 6 + i * 2) * 0.1;
-      const wobbleZ = Math.cos(time * 7 + i * 3) * 0.08;
+      // Subtle wobble
+      const wobbleX = Math.sin(time * 4 + i * 2) * 0.04;
+      const wobbleZ = Math.cos(time * 5 + i * 3) * 0.03;
       
       tempColor.set(bee.color);
       
