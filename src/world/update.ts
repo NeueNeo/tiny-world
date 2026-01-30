@@ -79,31 +79,6 @@ function updateCreature(creature: Creature, world: World): void {
     creature.vel.y += Math.cos(world.time * 0.03 + creature.pos.x * 0.01) * 0.02;
   }
   
-  // Dragonflies hover then dart
-  if (creature.type === 'dragonfly') {
-    if (creature.state === 'rest') {
-      // Hovering - nearly still
-      creature.vel.x *= 0.9;
-      creature.vel.y *= 0.9;
-    } else if (creature.state === 'wander') {
-      // Darting - fast burst in one direction
-      const dartSpeed = 3.5;
-      if (Math.abs(creature.vel.x) < dartSpeed && Math.abs(creature.vel.y) < dartSpeed) {
-        const angle = Math.random() * Math.PI * 2;
-        creature.vel.x = Math.cos(angle) * dartSpeed;
-        creature.vel.y = Math.sin(angle) * dartSpeed;
-      }
-      // Quick deceleration after dart
-      creature.vel.x *= 0.96;
-      creature.vel.y *= 0.96;
-      // Switch to hover after slowing down
-      if (Math.abs(creature.vel.x) < 0.3 && Math.abs(creature.vel.y) < 0.3) {
-        creature.state = 'rest';
-        creature.stateTimer = randomInRange(80, 200);
-      }
-    }
-  }
-  
   // Apply velocity
   creature.pos.x += creature.vel.x;
   creature.pos.y += creature.vel.y;
