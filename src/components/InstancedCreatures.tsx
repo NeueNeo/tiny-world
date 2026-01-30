@@ -351,7 +351,9 @@ export function InstancedCaterpillars({ creatures, worldWidth, worldHeight }: In
     let segIndex = 0;
     let eyeIndex = 0;
     
-    caterpillars.forEach((cat) => {
+    const catLen = caterpillars.length;
+    for (let c = 0; c < catLen; c++) {
+      const cat = caterpillars[c];
       const [x, , z] = toSceneCoords(cat.pos.x, cat.pos.y, worldWidth, worldHeight);
       const scale = cat.size / 3;
       const rotation = Math.atan2(cat.vel.x, cat.vel.y);
@@ -374,7 +376,8 @@ export function InstancedCaterpillars({ creatures, worldWidth, worldHeight }: In
       }
       
       // 2 eyes on head
-      [-1, 1].forEach((side) => {
+      for (let e = 0; e < 2; e++) {
+        const side = e === 0 ? -1 : 1;
         dummy.position.set(
           x + Math.cos(rotation) * 0.018 * scale * side + Math.sin(rotation) * 0.02 * scale,
           0.035 * scale + 0.02,
@@ -383,8 +386,8 @@ export function InstancedCaterpillars({ creatures, worldWidth, worldHeight }: In
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
         eyesRef.current!.setMatrixAt(eyeIndex++, dummy.matrix);
-      });
-    });
+      }
+    }
     
     segmentsRef.current.instanceMatrix.needsUpdate = true;
     eyesRef.current.instanceMatrix.needsUpdate = true;
@@ -446,8 +449,10 @@ export function InstancedButterflies({ creatures, worldWidth, worldHeight }: Ins
     const time = state.clock.elapsedTime;
     
     let wingIndex = 0;
+    const bfLen = butterflies.length;
     
-    butterflies.forEach((bf, i) => {
+    for (let i = 0; i < bfLen; i++) {
+      const bf = butterflies[i];
       const [x, , z] = toSceneCoords(bf.pos.x, bf.pos.y, worldWidth, worldHeight);
       const scale = bf.size / 3;
       const rotation = Math.atan2(bf.vel.x, bf.vel.y);
@@ -480,7 +485,7 @@ export function InstancedButterflies({ creatures, worldWidth, worldHeight }: Ins
       dummy.scale.set(-scale, scale, scale); // Mirror
       dummy.updateMatrix();
       wingsRef.current!.setMatrixAt(wingIndex++, dummy.matrix);
-    });
+    }
     
     bodyRef.current.instanceMatrix.needsUpdate = true;
     wingsRef.current.instanceMatrix.needsUpdate = true;
