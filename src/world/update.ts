@@ -79,6 +79,20 @@ function updateCreature(creature: Creature, world: World): void {
     creature.vel.y += Math.cos(world.time * 0.03 + creature.pos.x * 0.01) * 0.02;
   }
   
+  // Dragonflies: slow hover, then quick dart forward, then slow again
+  if (creature.type === 'dragonfly') {
+    // Gradually slow down
+    creature.vel.x *= 0.97;
+    creature.vel.y *= 0.97;
+    
+    // Randomly dart forward
+    if (Math.random() < 0.008) {
+      const angle = Math.random() * Math.PI * 2;
+      creature.vel.x = Math.cos(angle) * 3.0;
+      creature.vel.y = Math.sin(angle) * 3.0;
+    }
+  }
+  
   // Apply velocity
   creature.pos.x += creature.vel.x;
   creature.pos.y += creature.vel.y;
