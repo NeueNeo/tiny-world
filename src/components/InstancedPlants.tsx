@@ -24,11 +24,6 @@ function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: nu
   return [sceneX, 0, sceneZ];
 }
 
-function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
 // Instanced Flowers with actual petals - base-anchored wind animation
 export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedPlantsProps) {
   const stemRef = useRef<InstancedMesh>(null);

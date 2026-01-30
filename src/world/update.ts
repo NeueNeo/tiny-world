@@ -1,4 +1,4 @@
-import type { World, Creature, Plant, Particle, Vector2 } from './types';
+import type { World, Creature, Plant, Vector2 } from './types';
 import { createPlant } from './create';
 
 const randomInRange = (min: number, max: number) => 

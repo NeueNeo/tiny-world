@@ -77,7 +77,7 @@ export function Snail({ creature, worldWidth, worldHeight }: CreatureProps) {
   
   const shellColor = useMemo(() => new Color(creature.color), [creature.color]);
   
-  useFrame((state) => {
+  useFrame(() => {
     if (groupRef.current) {
       const [nx, , nz] = toSceneCoords(creature.pos.x, creature.pos.y, worldWidth, worldHeight);
       groupRef.current.position.x = nx;

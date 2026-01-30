@@ -290,7 +290,7 @@ export function Wildflower({ plant, worldWidth, worldHeight }: PlantProps) {
   
   // Multiple small flowers on branching stems
   const flowers = useMemo(() => {
-    return Array.from({ length: 3 + Math.floor(Math.random() * 3) }).map((_, i) => ({
+    return Array.from({ length: 3 + Math.floor(Math.random() * 3) }).map(() => ({
       x: (Math.random() - 0.5) * 0.15,
       y: 0.3 + Math.random() * 0.25,
       z: (Math.random() - 0.5) * 0.15,
