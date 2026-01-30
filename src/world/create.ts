@@ -139,6 +139,14 @@ export function createWorld(width: number, height: number): World {
     plants.push(createPlant('wildflower', width, height));
   }
   
+  // Add small wildflowers
+  for (let i = 0; i < 10; i++) {
+    const smallWild = createPlant('wildflower', width, height);
+    smallWild.size *= 0.5;
+    smallWild.maxSize *= 0.5;
+    plants.push(smallWild);
+  }
+  
   // Add poppies - delicate cup-shaped meadow flowers
   for (let i = 0; i < 10; i++) {
     plants.push(createPlant('poppy', width, height));
