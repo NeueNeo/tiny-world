@@ -75,14 +75,17 @@ function App() {
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <Scene world={worldRef.current} rainOverride={rainOverride} />
-        <EffectComposer>
-          <Bloom 
-            luminanceThreshold={1}
-            luminanceSmoothing={0.9}
-            intensity={1.5}
-            radius={0.8}
-          />
-        </EffectComposer>
+        {/* Bloom only during night/dusk when fireflies are visible */}
+        {(worldRef.current.dayPhase < 0.25 || worldRef.current.dayPhase > 0.75) && (
+          <EffectComposer>
+            <Bloom 
+              luminanceThreshold={1}
+              luminanceSmoothing={0.9}
+              intensity={1.5}
+              radius={0.8}
+            />
+          </EffectComposer>
+        )}
         <OrbitControls 
           enablePan={true}
           enableZoom={true}

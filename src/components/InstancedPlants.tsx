@@ -133,15 +133,20 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
   }, [flowerData, dummy]);
   
   // Animate wind - base anchored, tops sway
+  const frameRef = useRef(0);
   useFrame((state) => {
+    frameRef.current++;
+    if (frameRef.current % 2 !== 0) return; // 30fps animation
     if (!stemRef.current || !centerRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const len = flowerData.length;
     
-    flowerData.forEach((f, i) => {
+    for (let i = 0; i < len; i++) {
+      const f = flowerData[i];
       // Wind sway - similar to grass but gentler for flowers
-      const rotX = Math.sin(time * 0.8 + f.x * 2 + f.z * 3) * 0.06; // rotation around X axis
-      const rotZ = Math.sin(time * 1.0 + f.x * 3 + f.z * 2) * 0.06; // rotation around Z axis
+      const rotX = Math.sin(time * 0.8 + f.x * 2 + f.z * 3) * 0.06;
+      const rotZ = Math.sin(time * 1.0 + f.x * 3 + f.z * 2) * 0.06;
       
       const stemTop = STEM_HEIGHT * f.scale;
       
@@ -152,15 +157,12 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
       dummy.updateMatrix();
       stemRef.current!.setMatrixAt(i, dummy.matrix);
       
-      // Calculate where stem tip ends up after rotation (Euler XYZ order)
-      // Local tip at (0, stemTop, 0) transformed by rotation
+      // Calculate where stem tip ends up after rotation
       const cosX = Math.cos(rotX);
       const sinX = Math.sin(rotX);
       const cosZ = Math.cos(rotZ);
       const sinZ = Math.sin(rotZ);
       
-      // After X rotation: (0, stemTop*cosX, stemTop*sinX)
-      // After Z rotation: (-stemTop*cosX*sinZ, stemTop*cosX*cosZ, stemTop*sinX)
       const tipLocalX = -stemTop * cosX * sinZ;
       const tipLocalY = stemTop * cosX * cosZ;
       const tipLocalZ = stemTop * sinX;
@@ -187,13 +189,13 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
         dummy.updateMatrix();
         petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
       }
-    });
+    }
     
     stemRef.current.instanceMatrix.needsUpdate = true;
     centerRef.current.instanceMatrix.needsUpdate = true;
-    petalRefs.forEach(ref => {
-      if (ref.current) ref.current.instanceMatrix.needsUpdate = true;
-    });
+    for (let r = 0; r < petalRefs.length; r++) {
+      if (petalRefs[r].current) petalRefs[r].current!.instanceMatrix.needsUpdate = true;
+    }
   });
   
   if (flowerData.length === 0) return null;
@@ -322,12 +324,17 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
   }, [flowerData, dummy]);
   
   // Animate wind
+  const frameRef2 = useRef(0);
   useFrame((state) => {
+    frameRef2.current++;
+    if (frameRef2.current % 2 !== 0) return; // 30fps animation
     if (!stemRef.current || !centerRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const len = flowerData.length;
     
-    flowerData.forEach((f, i) => {
+    for (let i = 0; i < len; i++) {
+      const f = flowerData[i];
       const rotX = Math.sin(time * 0.7 + f.x * 2 + f.z * 3) * 0.05;
       const rotZ = Math.sin(time * 0.9 + f.x * 3 + f.z * 2) * 0.05;
       
@@ -372,7 +379,7 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
         dummy.updateMatrix();
         petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
       }
-    });
+    }
     
     stemRef.current.instanceMatrix.needsUpdate = true;
     centerRef.current.instanceMatrix.needsUpdate = true;

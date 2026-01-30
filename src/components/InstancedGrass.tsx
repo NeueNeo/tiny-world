@@ -148,12 +148,18 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
   }, [bladeData, dummy]);
   
   // Animate wind - rotation from base means gentler angles for natural sway
+  // Skip every other frame to reduce load
+  const frameRef = useRef(0);
   useFrame((state) => {
+    frameRef.current++;
+    if (frameRef.current % 2 !== 0) return; // 30fps animation
     if (!meshRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const len = bladeData.length;
     
-    bladeData.forEach((blade, i) => {
+    for (let i = 0; i < len; i++) {
+      const blade = bladeData[i];
       const wind = Math.sin(time * 1.2 + blade.x * 3 + blade.z * 2) * 0.08;
       
       dummy.position.set(blade.x, blade.y, blade.z);
@@ -161,7 +167,7 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
       dummy.scale.set(1, blade.height, 1);
       dummy.updateMatrix();
       meshRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     meshRef.current.instanceMatrix.needsUpdate = true;
   });
