@@ -140,7 +140,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add small wildflowers
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 40; i++) {
     const smallWild = createPlant('wildflower', width, height);
     smallWild.size *= 0.5;
     smallWild.maxSize *= 0.5;
