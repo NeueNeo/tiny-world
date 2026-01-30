@@ -34,7 +34,7 @@ function findNearbyPlant(plants: Plant[], pos: Vector2, maxDist: number, minSize
 }
 
 function updateCreature(creature: Creature, world: World): void {
-  const speeds: Record<string, number> = { bug: 0.4, snail: 0.2, butterfly: 1.2, caterpillar: 0.3, ant: 1.0 };
+  const speeds: Record<string, number> = { bug: 0.4, snail: 0.2, butterfly: 1.2, caterpillar: 0.3, ant: 1.0, bee: 1.8, dragonfly: 2.0 };
   const speed = speeds[creature.type] ?? 0.3;
   
   creature.stateTimer--;
