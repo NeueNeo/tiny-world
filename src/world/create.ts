@@ -45,8 +45,8 @@ export function createCreature(type: Creature['type'], worldWidth: number, world
   return {
     id: randomId(),
     pos: { 
-      x: randomInRange(20, worldWidth - 20), 
-      y: randomInRange(20, worldHeight - 20) 
+      x: randomInRange(10, worldWidth - 10), 
+      y: randomInRange(10, worldHeight - 10) 
     },
     vel: { x: 0, y: 0 },
     size: sizes[type] + randomInRange(-1, 1),
@@ -66,8 +66,8 @@ export function createPlant(type: Plant['type'], worldWidth: number, worldHeight
   return {
     id: randomId(),
     pos: pos || { 
-      x: randomInRange(30, worldWidth - 30), 
-      y: randomInRange(30, worldHeight - 30) 
+      x: randomInRange(10, worldWidth - 10), 
+      y: randomInRange(10, worldHeight - 10) 
     },
     // Start at full size unless explicitly told to start small (for new spawns)
     size: startSmall ? randomInRange(1, 3) : maxSize * randomInRange(0.8, 1.0),
@@ -164,15 +164,15 @@ export function createWorld(width: number, height: number): World {
   }
   // Mushroom patches - 6 patches with 2-3 mushrooms each, loosely grouped
   for (let patch = 0; patch < 6; patch++) {
-    const patchCenterX = randomInRange(60, width - 60);
-    const patchCenterY = randomInRange(60, height - 60);
+    const patchCenterX = randomInRange(20, width - 20);
+    const patchCenterY = randomInRange(20, height - 20);
     const mushroomsInPatch = 2 + Math.floor(seededRandom() * 2); // 2-3 per patch
     for (let m = 0; m < mushroomsInPatch; m++) {
       const offsetX = randomInRange(-25, 25);
       const offsetY = randomInRange(-25, 25);
       const pos = {
-        x: Math.max(30, Math.min(width - 30, patchCenterX + offsetX)),
-        y: Math.max(30, Math.min(height - 30, patchCenterY + offsetY))
+        x: Math.max(5, Math.min(width - 5, patchCenterX + offsetX)),
+        y: Math.max(5, Math.min(height - 5, patchCenterY + offsetY))
       };
       plants.push(createPlant('mushroom', width, height, pos));
     }
@@ -190,30 +190,30 @@ export function createWorld(width: number, height: number): World {
   }
   // Moss patches - 10 patches with 4-8 cushions each, tightly grouped
   for (let patch = 0; patch < 10; patch++) {
-    const patchCenterX = randomInRange(50, width - 50);
-    const patchCenterY = randomInRange(50, height - 50);
+    const patchCenterX = randomInRange(15, width - 15);
+    const patchCenterY = randomInRange(15, height - 15);
     const mossInPatch = 4 + Math.floor(seededRandom() * 5); // 4-8 per patch
     for (let m = 0; m < mossInPatch; m++) {
       const offsetX = randomInRange(-20, 20);
       const offsetY = randomInRange(-20, 20);
       const pos = {
-        x: Math.max(20, Math.min(width - 20, patchCenterX + offsetX)),
-        y: Math.max(20, Math.min(height - 20, patchCenterY + offsetY))
+        x: Math.max(5, Math.min(width - 5, patchCenterX + offsetX)),
+        y: Math.max(5, Math.min(height - 5, patchCenterY + offsetY))
       };
       plants.push(createPlant('moss', width, height, pos));
     }
   }
   // Wide moss patches - 7 larger spreading clumps
   for (let patch = 0; patch < 7; patch++) {
-    const patchCenterX = randomInRange(80, width - 80);
-    const patchCenterY = randomInRange(80, height - 80);
+    const patchCenterX = randomInRange(25, width - 25);
+    const patchCenterY = randomInRange(25, height - 25);
     const mossInPatch = 10 + Math.floor(seededRandom() * 8); // 10-17 per wide patch
     for (let m = 0; m < mossInPatch; m++) {
       const offsetX = randomInRange(-50, 50); // Wider spread
       const offsetY = randomInRange(-50, 50);
       const pos = {
-        x: Math.max(20, Math.min(width - 20, patchCenterX + offsetX)),
-        y: Math.max(20, Math.min(height - 20, patchCenterY + offsetY))
+        x: Math.max(5, Math.min(width - 5, patchCenterX + offsetX)),
+        y: Math.max(5, Math.min(height - 5, patchCenterY + offsetY))
       };
       const wideMoss = createPlant('moss', width, height, pos);
       wideMoss.size *= 1.3 + seededRandom() * 0.5; // Slightly larger cushions
@@ -222,15 +222,15 @@ export function createWorld(width: number, height: number): World {
   }
   // Extra-large moss patches - 2 sprawling areas
   for (let patch = 0; patch < 2; patch++) {
-    const patchCenterX = randomInRange(100, width - 100);
-    const patchCenterY = randomInRange(100, height - 100);
+    const patchCenterX = randomInRange(30, width - 30);
+    const patchCenterY = randomInRange(30, height - 30);
     const mossInPatch = 25 + Math.floor(seededRandom() * 15); // 25-40 per patch
     for (let m = 0; m < mossInPatch; m++) {
       const offsetX = randomInRange(-90, 90); // Much wider spread
       const offsetY = randomInRange(-90, 90);
       const pos = {
-        x: Math.max(20, Math.min(width - 20, patchCenterX + offsetX)),
-        y: Math.max(20, Math.min(height - 20, patchCenterY + offsetY))
+        x: Math.max(5, Math.min(width - 5, patchCenterX + offsetX)),
+        y: Math.max(5, Math.min(height - 5, patchCenterY + offsetY))
       };
       const bigMoss = createPlant('moss', width, height, pos);
       bigMoss.size *= 1.5 + seededRandom() * 0.8;
