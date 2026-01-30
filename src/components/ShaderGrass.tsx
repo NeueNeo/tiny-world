@@ -121,8 +121,8 @@ export function ShaderGrass({ plants, worldWidth, worldHeight }: ShaderGrassProp
   const material = useMemo(() => new ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uBaseColor: { value: new Color('#1a6b1a') },
-      uTipColor: { value: new Color('#3cb371') },
+      uBaseColor: { value: new Color('#1e7b1e') },
+      uTipColor: { value: new Color('#45ce82') },
     },
     vertexShader,
     fragmentShader,
