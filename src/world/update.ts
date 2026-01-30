@@ -111,25 +111,12 @@ function updatePlant(plant: Plant, world: World): void {
     plant.size += plant.growthRate * dayBonus * rainBonus;
   }
   
-  // Old plants might spawn new ones
-  if (plant.age > 2000 && plant.size > plant.maxSize * 0.8 && Math.random() < 0.0005) {
-    const offset = { 
-      x: randomInRange(-40, 40), 
-      y: randomInRange(-40, 40) 
-    };
-    const newPos = { 
-      x: Math.max(30, Math.min(world.width - 30, plant.pos.x + offset.x)),
-      y: Math.max(30, Math.min(world.height - 30, plant.pos.y + offset.y))
-    };
-    if (world.plants.length < 300) {
-      world.plants.push(createPlant(plant.type, world.width, world.height, newPos, true));
-    }
-  }
+  // Old plants might spawn new ones (disabled to prevent memory growth)
+  // The initial plant count is sufficient for the scene
   
-  // Remove very small eaten plants
+  // Keep minimum size (don't remove - causes array reallocation)
   if (plant.size < 0.5) {
-    const idx = world.plants.indexOf(plant);
-    if (idx > -1) world.plants.splice(idx, 1);
+    plant.size = 0.5;
   }
 }
 
@@ -184,6 +171,6 @@ export function updateWorld(world: World): void {
   // Update all entities
   world.creatures.forEach(c => updateCreature(c, world));
   world.plants.forEach(p => updatePlant(p, world));
-  updateParticles(world);
+  // Note: particles disabled - 3D uses InstancedRain instead
   updateWeather(world);
 }
