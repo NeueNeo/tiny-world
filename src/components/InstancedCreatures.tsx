@@ -229,8 +229,10 @@ export function InstancedBugs({ creatures, worldWidth, worldHeight }: InstancedC
     if (!bodyRef.current || !headRef.current || !legsRef.current) return;
     
     const time = state.clock.elapsedTime;
+    const bugLen = bugs.length;
     
-    bugs.forEach((bug, i) => {
+    for (let i = 0; i < bugLen; i++) {
+      const bug = bugs[i];
       const [x, , z] = toSceneCoords(bug.pos.x, bug.pos.y, worldWidth, worldHeight);
       const scale = bug.size / 2.5;
       const rotation = Math.atan2(bug.vel.x, bug.vel.y);
@@ -254,14 +256,15 @@ export function InstancedBugs({ creatures, worldWidth, worldHeight }: InstancedC
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       headRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     bodyRef.current.instanceMatrix.needsUpdate = true;
     headRef.current.instanceMatrix.needsUpdate = true;
     
     // Legs - 6 per bug
     let legIndex = 0;
-    bugs.forEach((bug) => {
+    for (let i = 0; i < bugLen; i++) {
+      const bug = bugs[i];
       const [x, , z] = toSceneCoords(bug.pos.x, bug.pos.y, worldWidth, worldHeight);
       const scale = bug.size / 2.5;
       const rotation = Math.atan2(bug.vel.x, bug.vel.y);
@@ -269,7 +272,9 @@ export function InstancedBugs({ creatures, worldWidth, worldHeight }: InstancedC
       const baseY = 0.05 + bob - 0.02;
       
       // 3 pairs of legs
-      [-1, 0, 1].forEach((pair) => {
+      const pairs = [-1, 0, 1];
+      for (let p = 0; p < 3; p++) {
+        const pair = pairs[p];
         // Right leg
         const rX = x + Math.cos(rotation) * 0.06 * scale;
         const rZ = z - Math.sin(rotation) * 0.06 * scale + Math.cos(rotation) * pair * 0.03 * scale;
@@ -287,8 +292,8 @@ export function InstancedBugs({ creatures, worldWidth, worldHeight }: InstancedC
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
         legsRef.current!.setMatrixAt(legIndex++, dummy.matrix);
-      });
-    });
+      }
+    }
     
     legsRef.current.instanceMatrix.needsUpdate = true;
   });
