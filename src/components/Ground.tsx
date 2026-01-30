@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, ShaderMaterial, Color, DoubleSide, UniformsLib, UniformsUtils } from 'three';
 
@@ -173,6 +173,13 @@ export function Ground({ dayPhase = 0.5 }: GroundProps) {
     materialRef.current = mat;
     return mat;
   }, []);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      material.dispose();
+    };
+  }, [material]);
   
   return (
     <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
