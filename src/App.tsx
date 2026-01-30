@@ -10,6 +10,7 @@ function App() {
   const worldRef = useRef<World | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [rainOverride, setRainOverride] = useState<boolean | null>(null); // null = auto, true = on, false = off
   const [, forceUpdate] = useState(0);
 
   const initWorld = useCallback(() => {
@@ -72,7 +73,7 @@ function App() {
         style={{ background: '#1a1a2e' }}
         gl={{ antialias: false, powerPreference: 'high-performance' }}
       >
-        <Scene world={worldRef.current} />
+        <Scene world={worldRef.current} rainOverride={rainOverride} />
         <OrbitControls 
           enablePan={true}
           enableZoom={true}
@@ -86,6 +87,13 @@ function App() {
       <div className="controls">
         <button onClick={() => setIsPaused(!isPaused)} className="control-btn">
           {isPaused ? '▶️' : '⏸️'}
+        </button>
+        <button 
+          onClick={() => setRainOverride(prev => prev === true ? false : true)} 
+          className={`control-btn ${rainOverride === true ? 'active' : ''}`}
+          title="Toggle rain"
+        >
+          🌧️
         </button>
         <button onClick={() => setShowInfo(!showInfo)} className="control-btn">
           ℹ️

@@ -1,36 +1,49 @@
-import { useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Color } from 'three';
 import { Ground } from './Ground';
-import { CreatureModel } from './Creatures';
 import { InstancedGrass } from './InstancedGrass';
 import { InstancedFlowers, InstancedFlatFlowers, InstancedMushrooms } from './InstancedPlants';
+import { InstancedMoss } from './InstancedMoss';
+import { InstancedSticks } from './InstancedSticks';
+import { InstancedAnts, InstancedBugs, InstancedCaterpillars, InstancedButterflies, InstancedSnails } from './InstancedCreatures';
+import { InstancedDragonflies } from './InstancedDragonflies';
+import { InstancedBees } from './InstancedBees';
+import { InstancedRain } from './InstancedRain';
 import type { World } from '../world/types';
 
 interface SceneProps {
   world: World;
+  rainOverride?: boolean | null; // null = auto (use world.weather), true = force on, false = force off
 }
 
-export function Scene({ world }: SceneProps) {
+export function Scene({ world, rainOverride }: SceneProps) {
   const { scene } = useThree();
-  const sunPosition = useRef<[number, number, number]>([10, 10, 10]);
+  
+  // Determine if it's raining
+  const isRaining = rainOverride === true || (rainOverride === null && world.weather === 'rain');
   
   // Sky colors - reuse single Color object to avoid GC pressure
-  const dayColor = useMemo(() => new Color('#87CEEB'), []);    // Light blue
-  const nightColor = useMemo(() => new Color('#1a1a3e'), []);  // Dark blue
-  const skyColor = useMemo(() => new Color(), []);             // Reusable for interpolation
+  const dayColor = useMemo(() => new Color('#87CEEB'), []);       // Light blue
+  const nightColor = useMemo(() => new Color('#1a1a3e'), []);     // Dark blue
+  const rainyDayColor = useMemo(() => new Color('#6b7b8a'), []);  // Gray-blue overcast
+  const rainyNightColor = useMemo(() => new Color('#2a2a3a'), []); // Darker gray-blue
+  const skyColor = useMemo(() => new Color(), []);                // Reusable for interpolation
   
-  // Update sun position and sky color based on day phase
-  useFrame(() => {
-    const angle = world.dayPhase * Math.PI * 2 - Math.PI / 2;
-    const height = Math.sin(world.dayPhase * Math.PI) * 20;
+  // Sun position calculated each frame
+  const getSunPosition = (dayPhase: number): [number, number, number] => {
+    const angle = dayPhase * Math.PI * 2 - Math.PI / 2;
+    const height = Math.sin(dayPhase * Math.PI) * 20;
     const distance = 30;
-    sunPosition.current = [
+    return [
       Math.cos(angle) * distance,
       Math.max(2, height),
       Math.sin(angle) * distance * 0.5,
     ];
-    
+  };
+  
+  // Update sky color based on day phase and weather
+  useFrame(() => {
     // Interpolate sky color based on day phase
     // 0.3-0.7 is full day, outside that it transitions to night
     let brightness: number;
@@ -42,20 +55,28 @@ export function Scene({ world }: SceneProps) {
       brightness = (1 - world.dayPhase) / 0.3;
     }
     
-    skyColor.lerpColors(nightColor, dayColor, brightness);
+    if (isRaining) {
+      // Rainy sky - interpolate between rainy night and rainy day
+      skyColor.lerpColors(rainyNightColor, rainyDayColor, brightness);
+    } else {
+      // Clear sky - interpolate between night and day
+      skyColor.lerpColors(nightColor, dayColor, brightness);
+    }
+    
     scene.background = skyColor;
   });
   
-  // Calculate light intensity based on day phase
-  const lightIntensity = world.dayPhase >= 0.25 && world.dayPhase <= 0.75 ? 1.2 : 0.4;
-  const ambientIntensity = world.dayPhase >= 0.25 && world.dayPhase <= 0.75 ? 0.5 : 0.2;
+  // Calculate light intensity based on day phase and weather
+  const isDay = world.dayPhase >= 0.25 && world.dayPhase <= 0.75;
+  const lightIntensity = isDay ? (isRaining ? 0.6 : 1.2) : (isRaining ? 0.2 : 0.4);
+  const ambientIntensity = isDay ? (isRaining ? 0.4 : 0.5) : (isRaining ? 0.15 : 0.2);
   
   return (
     <>
       {/* Lighting */}
       <ambientLight intensity={ambientIntensity} />
       <directionalLight
-        position={sunPosition.current}
+        position={getSunPosition(world.dayPhase)}
         intensity={lightIntensity}
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -68,6 +89,9 @@ export function Scene({ world }: SceneProps) {
       
       {/* Ground */}
       <Ground />
+      
+      {/* Ground debris */}
+      <InstancedSticks />
       
       {/* All plants use instancing for performance */}
       <InstancedGrass 
@@ -90,39 +114,53 @@ export function Scene({ world }: SceneProps) {
         worldWidth={world.width} 
         worldHeight={world.height} 
       />
+      <InstancedMoss
+        plants={world.plants}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
       
-      {/* Creatures */}
-      {world.creatures.map((creature) => (
-        <CreatureModel
-          key={creature.id}
-          creature={creature}
-          worldWidth={world.width}
-          worldHeight={world.height}
-        />
-      ))}
+      {/* Instanced creatures */}
+      <InstancedAnts
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
+      <InstancedBugs
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
+      <InstancedCaterpillars
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
+      <InstancedButterflies
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
+      <InstancedSnails
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
+      <InstancedDragonflies
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
+      <InstancedBees
+        creatures={world.creatures}
+        worldWidth={world.width}
+        worldHeight={world.height}
+      />
       
-      {/* Rain particles */}
-      {world.weather === 'rain' && (
-        <RainEffect />
+      {/* Instanced rain particles */}
+      {(rainOverride === true || (rainOverride === null && world.weather === 'rain')) && (
+        <InstancedRain />
       )}
     </>
-  );
-}
-
-function RainEffect() {
-  const rainRef = useRef<any>(null);
-  
-  useFrame((state) => {
-    if (rainRef.current) {
-      rainRef.current.rotation.y = state.clock.elapsedTime * 0.1;
-    }
-  });
-  
-  // Simple rain using instanced lines would be better, but for now just darken the scene
-  return (
-    <mesh ref={rainRef} position={[0, 15, 0]}>
-      <boxGeometry args={[60, 30, 60]} />
-      <meshBasicMaterial color="#5588aa" transparent opacity={0.1} />
-    </mesh>
   );
 }

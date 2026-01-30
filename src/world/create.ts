@@ -21,7 +21,9 @@ const creatureColors: Record<Creature['type'], string[]> = {
   snail: ['#deb887', '#d2b48c', '#bc8f8f'],
   butterfly: ['#ffb6c1', '#87ceeb', '#dda0dd', '#f0e68c'],
   caterpillar: ['#7cb342', '#8bc34a', '#9ccc65', '#c5e1a5', '#ffeb3b'],
-  ant: ['#1a1a1a', '#2d1f1f', '#3d2b2b', '#4a3c3c'], // Black, dark brown, reddish-brown
+  ant: ['#1a1a1a', '#2d1f1f', '#3d2b2b', '#4a3c3c'],
+  dragonfly: ['#1e90ff', '#00ced1', '#32cd32', '#dc143c', '#4169e1', '#2f4f4f'], // Blue, cyan, green, red, royal blue, dark teal
+  bee: ['#f4a020', '#e8a000', '#d4940a', '#c98a00'], // Golden yellow variants
 };
 
 const plantColors: Record<Plant['type'], string[]> = {
@@ -33,11 +35,12 @@ const plantColors: Record<Plant['type'], string[]> = {
   tulip: ['#e91e63', '#9c27b0', '#ff5722', '#ffeb3b', '#f44336'],
   wildflower: ['#ba68c8', '#7986cb', '#4fc3f7', '#81c784', '#ffb74d'],
   poppy: ['#e63946', '#ff6b35', '#f77f00', '#ffba08'], // Red, orange, deep orange, golden
+  moss: ['#5a7247', '#6b8e4e', '#4a6741', '#3d5a35', '#7da668', '#8fbc6f'], // Mix of light and dark greens
 };
 
 export function createCreature(type: Creature['type'], worldWidth: number, worldHeight: number): Creature {
   const colors = creatureColors[type];
-  const sizes: Record<Creature['type'], number> = { bug: 4, snail: 6, butterfly: 5, caterpillar: 5, ant: 2 };
+  const sizes: Record<Creature['type'], number> = { bug: 4, snail: 6, butterfly: 5, caterpillar: 5, ant: 2.1, dragonfly: 6, bee: 3 };
   
   return {
     id: randomId(),
@@ -57,7 +60,7 @@ export function createCreature(type: Creature['type'], worldWidth: number, world
 
 export function createPlant(type: Plant['type'], worldWidth: number, worldHeight: number, pos?: Vector2, startSmall?: boolean): Plant {
   const colors = plantColors[type];
-  const maxSizes: Record<Plant['type'], number> = { flower: 12, grass: 8, mushroom: 10, blade: 6, daisy: 10, tulip: 14, wildflower: 8, poppy: 8 };
+  const maxSizes: Record<Plant['type'], number> = { flower: 12, grass: 8, mushroom: 10, blade: 6, daisy: 10, tulip: 14, wildflower: 8, poppy: 8, moss: 8 };
   const maxSize = maxSizes[type] + randomInRange(-2, 4);
   
   return {
@@ -94,6 +97,16 @@ export function createWorld(width: number, height: number): World {
   // Add butterflies - fluttering above the meadow
   for (let i = 0; i < 12; i++) {
     creatures.push(createCreature('butterfly', width, height));
+  }
+  
+  // Add dragonflies - hovering and darting
+  for (let i = 0; i < 4; i++) {
+    creatures.push(createCreature('dragonfly', width, height));
+  }
+  
+  // Add bees - buzzing around flowers
+  for (let i = 0; i < 8; i++) {
+    creatures.push(createCreature('bee', width, height));
   }
   
   // Add caterpillars - crawling on the ground
@@ -160,6 +173,51 @@ export function createWorld(width: number, height: number): World {
   // Add single grass blades scattered everywhere
   for (let i = 0; i < 180; i++) {
     plants.push(createPlant('blade', width, height));
+  }
+  
+  // Add moss clumps - they grow in patches on the ground
+  // Scattered moss cushions
+  for (let i = 0; i < 25; i++) {
+    plants.push(createPlant('moss', width, height));
+  }
+  // Moss patches - 10 patches with 4-8 cushions each, tightly grouped
+  for (let patch = 0; patch < 10; patch++) {
+    const patchCenterX = randomInRange(50, width - 50);
+    const patchCenterY = randomInRange(50, height - 50);
+    const mossInPatch = 4 + Math.floor(seededRandom() * 5); // 4-8 per patch
+    for (let m = 0; m < mossInPatch; m++) {
+      const offsetX = randomInRange(-20, 20);
+      const offsetY = randomInRange(-20, 20);
+      const pos = {
+        x: Math.max(20, Math.min(width - 20, patchCenterX + offsetX)),
+        y: Math.max(20, Math.min(height - 20, patchCenterY + offsetY))
+      };
+      plants.push(createPlant('moss', width, height, pos));
+    }
+  }
+  // Wide moss patches - 5 larger spreading clumps
+  for (let patch = 0; patch < 5; patch++) {
+    const patchCenterX = randomInRange(80, width - 80);
+    const patchCenterY = randomInRange(80, height - 80);
+    const mossInPatch = 10 + Math.floor(seededRandom() * 8); // 10-17 per wide patch
+    for (let m = 0; m < mossInPatch; m++) {
+      const offsetX = randomInRange(-50, 50); // Wider spread
+      const offsetY = randomInRange(-50, 50);
+      const pos = {
+        x: Math.max(20, Math.min(width - 20, patchCenterX + offsetX)),
+        y: Math.max(20, Math.min(height - 20, patchCenterY + offsetY))
+      };
+      const wideMoss = createPlant('moss', width, height, pos);
+      wideMoss.size *= 1.3 + seededRandom() * 0.5; // Slightly larger cushions
+      plants.push(wideMoss);
+    }
+  }
+  // Large moss mounds - 2x size scattered around
+  for (let i = 0; i < 5; i++) {
+    const largeMoss = createPlant('moss', width, height);
+    largeMoss.size *= 2;
+    largeMoss.maxSize *= 2;
+    plants.push(largeMoss);
   }
   
   return {

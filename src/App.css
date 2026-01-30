@@ -60,6 +60,11 @@ body {
   transform: scale(0.95);
 }
 
+.control-btn.active {
+  background: rgba(100, 180, 255, 0.4);
+  box-shadow: 0 0 12px rgba(100, 180, 255, 0.3);
+}
+
 .info-panel {
   position: fixed;
   top: 80px;

@@ -9,7 +9,7 @@ export interface Creature {
   vel: Vector2;
   size: number;
   color: string;
-  type: 'bug' | 'snail' | 'butterfly' | 'caterpillar' | 'ant';
+  type: 'bug' | 'snail' | 'butterfly' | 'caterpillar' | 'ant' | 'dragonfly' | 'bee';
   state: 'wander' | 'rest' | 'eat';
   stateTimer: number;
   energy: number;
@@ -22,7 +22,7 @@ export interface Plant {
   maxSize: number;
   growthRate: number;
   color: string;
-  type: 'flower' | 'grass' | 'mushroom' | 'blade' | 'daisy' | 'tulip' | 'wildflower' | 'poppy';
+  type: 'flower' | 'grass' | 'mushroom' | 'blade' | 'daisy' | 'tulip' | 'wildflower' | 'poppy' | 'moss';
   age: number;
 }
 
