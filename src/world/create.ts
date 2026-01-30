@@ -212,6 +212,24 @@ export function createWorld(width: number, height: number): World {
       plants.push(wideMoss);
     }
   }
+  // Extra-large moss patches - 2 sprawling areas
+  for (let patch = 0; patch < 2; patch++) {
+    const patchCenterX = randomInRange(100, width - 100);
+    const patchCenterY = randomInRange(100, height - 100);
+    const mossInPatch = 25 + Math.floor(seededRandom() * 15); // 25-40 per patch
+    for (let m = 0; m < mossInPatch; m++) {
+      const offsetX = randomInRange(-90, 90); // Much wider spread
+      const offsetY = randomInRange(-90, 90);
+      const pos = {
+        x: Math.max(20, Math.min(width - 20, patchCenterX + offsetX)),
+        y: Math.max(20, Math.min(height - 20, patchCenterY + offsetY))
+      };
+      const bigMoss = createPlant('moss', width, height, pos);
+      bigMoss.size *= 1.5 + seededRandom() * 0.8;
+      plants.push(bigMoss);
+    }
+  }
+  
   // Large moss mounds - 2x size scattered around
   for (let i = 0; i < 5; i++) {
     const largeMoss = createPlant('moss', width, height);
