@@ -98,7 +98,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
     
     flowerData.forEach((f, i) => {
       const stemTop = STEM_HEIGHT * f.scale;
-      const headY = stemTop + 0.05 * f.scale;
+      const headY = stemTop;
       
       // Stem at ground level
       dummy.position.set(f.x, 0, f.z);
@@ -175,7 +175,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
       const tipLocalZ = stemTop * sinX;
       
       const headX = f.x + tipLocalX;
-      const headY = tipLocalY + 0.05 * f.scale;
+      const headY = tipLocalY;
       const headZ = f.z + tipLocalZ;
       
       // Center at stem tip
