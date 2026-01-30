@@ -85,12 +85,12 @@ export function createWorld(width: number, height: number): World {
   const plants: Plant[] = [];
   
   // Add some bugs
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 12; i++) {
     creatures.push(createCreature('bug', width, height));
   }
   
   // Add snails
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 9; i++) {
     creatures.push(createCreature('snail', width, height));
   }
   
@@ -110,7 +110,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add caterpillars - crawling on the ground
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 12; i++) {
     creatures.push(createCreature('caterpillar', width, height));
   }
   
