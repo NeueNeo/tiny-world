@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { InstancedMesh, Object3D, Color, BoxGeometry, MeshStandardMaterial } from 'three';
+import { InstancedMesh, Object3D, Color, BufferGeometry, Float32BufferAttribute, MeshStandardMaterial, DoubleSide } from 'three';
 import type { Plant } from '../world/types';
 
 interface InstancedGrassProps {
@@ -26,14 +26,40 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
   const dummy = useMemo(() => new Object3D(), []);
   
   // Shared geometry and material - pivot at bottom so rotation anchors the base
+  // Tapered blade: wide at bottom, narrow at top
   const geometry = useMemo(() => {
-    const geom = new BoxGeometry(0.02, 1, 0.008);
-    geom.translate(0, 0.5, 0); // Shift geometry so origin is at bottom
+    const geom = new BufferGeometry();
+    
+    const bottomWidth = 0.02;
+    const topWidth = 0.005; // Thinner at top
+    const height = 1;
+    
+    // Two triangles forming a tapered quad
+    const vertices = new Float32Array([
+      // First triangle (bottom-left, bottom-right, top-right)
+      -bottomWidth / 2, 0, 0,
+       bottomWidth / 2, 0, 0,
+       topWidth / 2, height, 0,
+      // Second triangle (bottom-left, top-right, top-left)
+      -bottomWidth / 2, 0, 0,
+       topWidth / 2, height, 0,
+      -topWidth / 2, height, 0,
+    ]);
+    
+    const normals = new Float32Array([
+      0, 0, 1,  0, 0, 1,  0, 0, 1,
+      0, 0, 1,  0, 0, 1,  0, 0, 1,
+    ]);
+    
+    geom.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+    geom.setAttribute('normal', new Float32BufferAttribute(normals, 3));
+    
     return geom;
   }, []);
   const material = useMemo(() => new MeshStandardMaterial({ 
     color: '#228b22', 
-    roughness: 0.85 
+    roughness: 0.85,
+    side: DoubleSide,
   }), []);
   
   // Cleanup on unmount
