@@ -108,8 +108,10 @@ export function InstancedFireflies({
     if (!meshRef.current || !glowRef.current || !isVisible) return;
     
     const time = state.clock.elapsedTime;
+    const len = fireflies.length;
     
-    fireflies.forEach((ff, i) => {
+    for (let i = 0; i < len; i++) {
+      const ff = fireflies[i];
       // Lazy floating movement
       const wobbleX = Math.sin(time * 0.3 + ff.phase) * 0.02;
       const wobbleZ = Math.cos(time * 0.4 + ff.phase * 1.3) * 0.02;
@@ -155,7 +157,7 @@ export function InstancedFireflies({
       dummy.scale.setScalar(scale * finalIntensity * 1.5);
       dummy.updateMatrix();
       glowRef.current!.setMatrixAt(i, dummy.matrix);
-    });
+    }
     
     meshRef.current.instanceMatrix.needsUpdate = true;
     glowRef.current.instanceMatrix.needsUpdate = true;
