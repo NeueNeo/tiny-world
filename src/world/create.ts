@@ -135,7 +135,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add wildflowers
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 45; i++) {
     plants.push(createPlant('wildflower', width, height));
   }
   
