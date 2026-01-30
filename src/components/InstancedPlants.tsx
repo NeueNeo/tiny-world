@@ -53,7 +53,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
   }, []);
   const centerGeom = useMemo(() => {
     const geom = new SphereGeometry(0.08, 6, 5);
-    geom.scale(1, 0.5, 1); // Flatten into oval like wildflowers
+    geom.scale(1, 0.35, 1); // Flatten into oval like wildflowers
     return geom;
   }, []);
   const petalGeom = useMemo(() => {
