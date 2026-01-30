@@ -19,8 +19,8 @@ interface InstancedPlantsProps {
 }
 
 function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: number): [number, number, number] {
-  const sceneX = (x / worldWidth - 0.5) * 21;
-  const sceneZ = (y / worldHeight - 0.5) * 21;
+  const sceneX = (x / worldWidth - 0.5) * 24;
+  const sceneZ = (y / worldHeight - 0.5) * 24;
   return [sceneX, 0, sceneZ];
 }
 
