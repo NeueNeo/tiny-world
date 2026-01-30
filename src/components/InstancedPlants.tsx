@@ -51,7 +51,11 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
     geom.translate(0, STEM_HEIGHT / 2, 0); // Pivot at bottom
     return geom;
   }, []);
-  const centerGeom = useMemo(() => new SphereGeometry(0.08, 5, 5), []);
+  const centerGeom = useMemo(() => {
+    const geom = new SphereGeometry(0.08, 6, 5);
+    geom.scale(1, 0.5, 1); // Flatten into oval like wildflowers
+    return geom;
+  }, []);
   const petalGeom = useMemo(() => new SphereGeometry(0.12, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), []);
   
   // Materials
@@ -112,7 +116,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
         const px = f.x + Math.cos(angle) * 0.15 * f.scale;
         const pz = f.z + Math.sin(angle) * 0.15 * f.scale;
         
-        dummy.position.set(px, headY, pz);
+        dummy.position.set(px, headY - 0.03 * f.scale, pz);
         dummy.scale.set(f.scale, f.scale, f.scale);
         dummy.rotation.set(0, angle, 0);
         dummy.updateMatrix();
@@ -182,7 +186,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
         const px = headX + Math.cos(angle) * 0.15 * f.scale;
         const pz = headZ + Math.sin(angle) * 0.15 * f.scale;
         
-        dummy.position.set(px, headY, pz);
+        dummy.position.set(px, headY - 0.03 * f.scale, pz);
         dummy.scale.set(f.scale, f.scale, f.scale);
         dummy.rotation.set(0, angle, 0);
         dummy.updateMatrix();
