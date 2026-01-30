@@ -195,8 +195,8 @@ export function createWorld(width: number, height: number): World {
       plants.push(createPlant('moss', width, height, pos));
     }
   }
-  // Wide moss patches - 5 larger spreading clumps
-  for (let patch = 0; patch < 5; patch++) {
+  // Wide moss patches - 7 larger spreading clumps
+  for (let patch = 0; patch < 7; patch++) {
     const patchCenterX = randomInRange(80, width - 80);
     const patchCenterY = randomInRange(80, height - 80);
     const mossInPatch = 10 + Math.floor(seededRandom() * 8); // 10-17 per wide patch
