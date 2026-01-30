@@ -10,6 +10,7 @@ import { InstancedAnts, InstancedBugs, InstancedCaterpillars, InstancedButterfli
 import { InstancedDragonflies } from './InstancedDragonflies';
 import { InstancedBees } from './InstancedBees';
 import { InstancedRain } from './InstancedRain';
+import { InstancedFireflies } from './InstancedFireflies';
 import type { World } from '../world/types';
 
 interface SceneProps {
@@ -161,6 +162,9 @@ export function Scene({ world, rainOverride }: SceneProps) {
       {(rainOverride === true || (rainOverride === null && world.weather === 'rain')) && (
         <InstancedRain />
       )}
+      
+      {/* Fireflies - only at dusk/night */}
+      <InstancedFireflies count={30} dayPhase={world.dayPhase} />
     </>
   );
 }

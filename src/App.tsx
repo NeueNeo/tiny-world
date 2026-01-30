@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { createWorld, updateWorld } from './world/index';
 import type { World } from './world/index';
 import { Scene } from './components/Scene';
@@ -74,6 +75,14 @@ function App() {
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         <Scene world={worldRef.current} rainOverride={rainOverride} />
+        <EffectComposer>
+          <Bloom 
+            luminanceThreshold={1}
+            luminanceSmoothing={0.9}
+            intensity={1.5}
+            radius={0.8}
+          />
+        </EffectComposer>
         <OrbitControls 
           enablePan={true}
           enableZoom={true}

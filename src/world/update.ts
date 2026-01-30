@@ -1,5 +1,4 @@
 import type { World, Creature, Plant, Vector2 } from './types';
-import { createPlant } from './create';
 
 const randomInRange = (min: number, max: number) => 
   Math.random() * (max - min) + min;
@@ -117,40 +116,6 @@ function updatePlant(plant: Plant, world: World): void {
   // Keep minimum size (don't remove - causes array reallocation)
   if (plant.size < 0.5) {
     plant.size = 0.5;
-  }
-}
-
-function updateParticles(world: World): void {
-  // Update existing particles
-  world.particles = world.particles.filter(p => {
-    p.pos.x += p.vel.x;
-    p.pos.y += p.vel.y;
-    p.life--;
-    return p.life > 0 && p.pos.y < world.height;
-  });
-  
-  // Rain particles
-  if (world.weather === 'rain' && Math.random() < 0.3) {
-    world.particles.push({
-      pos: { x: Math.random() * world.width, y: -5 },
-      vel: { x: -0.5, y: 3 },
-      life: 200,
-      maxLife: 200,
-      size: 2,
-      color: '#a0c4e8',
-    });
-  }
-  
-  // Occasional floating particles (pollen, dust)
-  if (world.weather === 'clear' && Math.random() < 0.02) {
-    world.particles.push({
-      pos: { x: Math.random() * world.width, y: world.height + 5 },
-      vel: { x: randomInRange(-0.2, 0.2), y: randomInRange(-0.5, -0.2) },
-      life: 300,
-      maxLife: 300,
-      size: 2,
-      color: '#fff8dc',
-    });
   }
 }
 
