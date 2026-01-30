@@ -1,46 +1,42 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useRef, useEffect, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+// postprocessing removed - no bloom needed for daytime only
 import { createWorld, updateWorld } from './world/index';
 import type { World } from './world/index';
 import { Scene } from './components/Scene';
 import './App.css';
 
+// World updater inside R3F - no React state churn
+function WorldUpdater({ world, isPaused }: { world: World; isPaused: boolean }) {
+  const frameRef = useRef(0);
+  
+  useFrame(() => {
+    if (isPaused) return;
+    
+    // Update at ~20fps (every 3rd frame at 60fps)
+    frameRef.current++;
+    if (frameRef.current % 3 === 0) {
+      updateWorld(world);
+    }
+  });
+  
+  return null;
+}
+
 function App() {
   const worldRef = useRef<World | null>(null);
+  const [worldReady, setWorldReady] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [rainOverride, setRainOverride] = useState<boolean | null>(null); // null = auto, true = on, false = off
-  const [, forceUpdate] = useState(0);
 
-  const initWorld = useCallback(() => {
+  useEffect(() => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     worldRef.current = createWorld(width, height);
+    setWorldReady(true);
   }, []);
-
-  useEffect(() => {
-    initWorld();
-  }, [initWorld]);
-
-  // Throttled update - 20fps instead of 60fps for world simulation
-  useEffect(() => {
-    let intervalId: number;
-    
-    if (!isPaused) {
-      intervalId = window.setInterval(() => {
-        if (worldRef.current) {
-          updateWorld(worldRef.current);
-          forceUpdate((n) => n + 1);
-        }
-      }, 50); // 20fps
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [isPaused]);
 
   const getTimeOfDay = () => {
     if (!worldRef.current) return 'Day';
@@ -61,7 +57,7 @@ function App() {
     }
   };
 
-  if (!worldRef.current) {
+  if (!worldReady || !worldRef.current) {
     return <div className="loading">Growing world...</div>;
   }
 
@@ -72,20 +68,10 @@ function App() {
         dpr={[1, 1.5]} // Limit pixel ratio for performance
         camera={{ position: [0, 8, 12], fov: 60 }}
         style={{ background: '#1a1a2e' }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        gl={{ antialias: false, powerPreference: 'high-performance' }}
       >
+        <WorldUpdater world={worldRef.current} isPaused={isPaused} />
         <Scene world={worldRef.current} rainOverride={rainOverride} />
-        {/* Bloom only during night/dusk when fireflies are visible */}
-        {(worldRef.current.dayPhase < 0.25 || worldRef.current.dayPhase > 0.75) && (
-          <EffectComposer>
-            <Bloom 
-              luminanceThreshold={1}
-              luminanceSmoothing={0.9}
-              intensity={1.5}
-              radius={0.8}
-            />
-          </EffectComposer>
-        )}
         <OrbitControls 
           enablePan={true}
           enableZoom={true}

@@ -24,7 +24,7 @@ function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: nu
 
 // Instanced Ants - all ants share the same geometries
 export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedCreaturesProps) {
-  const ants = creatures.filter(c => c.type === 'ant');
+  const ants = useMemo(() => creatures.filter(c => c.type === 'ant'), [creatures]);
   const count = ants.length;
   
   // Refs for each body part's instanced mesh
@@ -188,7 +188,7 @@ export function InstancedAnts({ creatures, worldWidth, worldHeight }: InstancedC
 
 // Instanced Bugs (Beetles)
 export function InstancedBugs({ creatures, worldWidth, worldHeight }: InstancedCreaturesProps) {
-  const bugs = creatures.filter(c => c.type === 'bug');
+  const bugs = useMemo(() => creatures.filter(c => c.type === 'bug'), [creatures]);
   const count = bugs.length;
   
   const bodyRef = useRef<InstancedMesh>(null);
@@ -311,7 +311,7 @@ export function InstancedBugs({ creatures, worldWidth, worldHeight }: InstancedC
 
 // Instanced Caterpillars
 export function InstancedCaterpillars({ creatures, worldWidth, worldHeight }: InstancedCreaturesProps) {
-  const caterpillars = creatures.filter(c => c.type === 'caterpillar');
+  const caterpillars = useMemo(() => creatures.filter(c => c.type === 'caterpillar'), [creatures]);
   const count = caterpillars.length;
   
   // 6 segments per caterpillar
@@ -405,7 +405,7 @@ export function InstancedCaterpillars({ creatures, worldWidth, worldHeight }: In
 
 // Instanced Butterflies
 export function InstancedButterflies({ creatures, worldWidth, worldHeight }: InstancedCreaturesProps) {
-  const butterflies = creatures.filter(c => c.type === 'butterfly');
+  const butterflies = useMemo(() => creatures.filter(c => c.type === 'butterfly'), [creatures]);
   const count = butterflies.length;
   
   const bodyRef = useRef<InstancedMesh>(null);
@@ -503,7 +503,7 @@ export function InstancedButterflies({ creatures, worldWidth, worldHeight }: Ins
 
 // Instanced Snails
 export function InstancedSnails({ creatures, worldWidth, worldHeight }: InstancedCreaturesProps) {
-  const snails = creatures.filter(c => c.type === 'snail');
+  const snails = useMemo(() => creatures.filter(c => c.type === 'snail'), [creatures]);
   const count = snails.length;
   
   const shellRef = useRef<InstancedMesh>(null);

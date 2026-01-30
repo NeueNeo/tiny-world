@@ -7,14 +7,34 @@ function distance(a: Vector2, b: Vector2): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
-function normalize(v: Vector2): Vector2 {
-  const len = Math.sqrt(v.x ** 2 + v.y ** 2);
-  if (len === 0) return { x: 0, y: 0 };
-  return { x: v.x / len, y: v.y / len };
+// Reusable vector to avoid allocations
+const _tempVec: Vector2 = { x: 0, y: 0 };
+
+function normalize(vx: number, vy: number): Vector2 {
+  const len = Math.sqrt(vx * vx + vy * vy);
+  if (len === 0) {
+    _tempVec.x = 0;
+    _tempVec.y = 0;
+  } else {
+    _tempVec.x = vx / len;
+    _tempVec.y = vy / len;
+  }
+  return _tempVec;
+}
+
+// Find nearby plant without creating closures
+function findNearbyPlant(plants: Plant[], pos: Vector2, maxDist: number, minSize: number): Plant | null {
+  for (let i = 0, len = plants.length; i < len; i++) {
+    const p = plants[i];
+    if (p.size > minSize && distance(pos, p.pos) < maxDist) {
+      return p;
+    }
+  }
+  return null;
 }
 
 function updateCreature(creature: Creature, world: World): void {
-  const speeds: Record<string, number> = { bug: 0.8, snail: 0.2, butterfly: 1.2, caterpillar: 0.3, ant: 1.0 };
+  const speeds: Record<string, number> = { bug: 0.4, snail: 0.2, butterfly: 1.2, caterpillar: 0.3, ant: 1.0 };
   const speed = speeds[creature.type] ?? 0.3;
   
   creature.stateTimer--;
@@ -27,27 +47,25 @@ function updateCreature(creature: Creature, world: World): void {
       creature.stateTimer = randomInRange(120, 300);
       // Pick new direction
       const angle = Math.random() * Math.PI * 2;
-      creature.vel = { 
-        x: Math.cos(angle) * speed, 
-        y: Math.sin(angle) * speed 
-      };
+      creature.vel.x = Math.cos(angle) * speed;
+      creature.vel.y = Math.sin(angle) * speed;
     } else if (rand < 0.85) {
       creature.state = 'rest';
       creature.stateTimer = randomInRange(60, 180);
-      creature.vel = { x: 0, y: 0 };
+      creature.vel.x = 0;
+      creature.vel.y = 0;
     } else {
       // Look for nearby plant to eat
-      const nearbyPlant = world.plants.find(p => 
-        distance(creature.pos, p.pos) < 50 && p.size > 3
-      );
+      const nearbyPlant = findNearbyPlant(world.plants, creature.pos, 50, 3);
       if (nearbyPlant) {
         creature.state = 'eat';
         creature.stateTimer = randomInRange(60, 120);
-        const dir = normalize({ 
-          x: nearbyPlant.pos.x - creature.pos.x, 
-          y: nearbyPlant.pos.y - creature.pos.y 
-        });
-        creature.vel = { x: dir.x * speed * 0.5, y: dir.y * speed * 0.5 };
+        const dir = normalize(
+          nearbyPlant.pos.x - creature.pos.x, 
+          nearbyPlant.pos.y - creature.pos.y
+        );
+        creature.vel.x = dir.x * speed * 0.5;
+        creature.vel.y = dir.y * speed * 0.5;
       } else {
         creature.state = 'wander';
         creature.stateTimer = randomInRange(60, 120);
@@ -86,9 +104,7 @@ function updateCreature(creature: Creature, world: World): void {
   
   // Eating behavior
   if (creature.state === 'eat') {
-    const nearbyPlant = world.plants.find(p => 
-      distance(creature.pos, p.pos) < 15 && p.size > 2
-    );
+    const nearbyPlant = findNearbyPlant(world.plants, creature.pos, 15, 2);
     if (nearbyPlant) {
       nearbyPlant.size -= 0.01;
       creature.energy = Math.min(100, creature.energy + 0.1);
@@ -130,12 +146,17 @@ function updateWeather(world: World): void {
 export function updateWorld(world: World): void {
   world.time++;
   
-  // Day/night cycle (very slow - full cycle ~10 minutes)
-  world.dayPhase = (world.dayPhase + 0.00005) % 1;
+  // Day/night cycle disabled - always noon
+  world.dayPhase = 0.5;
   
-  // Update all entities
-  world.creatures.forEach(c => updateCreature(c, world));
-  world.plants.forEach(p => updatePlant(p, world));
-  // Note: particles disabled - 3D uses InstancedRain instead
+  // Update all entities - use for loops to avoid closure allocation
+  const creatures = world.creatures;
+  const plants = world.plants;
+  for (let i = 0, len = creatures.length; i < len; i++) {
+    updateCreature(creatures[i], world);
+  }
+  for (let i = 0, len = plants.length; i < len; i++) {
+    updatePlant(plants[i], world);
+  }
   updateWeather(world);
 }

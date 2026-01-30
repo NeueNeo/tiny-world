@@ -28,13 +28,12 @@ function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: nu
 export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedPlantsProps) {
   const stemRef = useRef<InstancedMesh>(null);
   const centerRef = useRef<InstancedMesh>(null);
-  const petalRefs = [
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-  ];
+  const petalRef0 = useRef<InstancedMesh>(null);
+  const petalRef1 = useRef<InstancedMesh>(null);
+  const petalRef2 = useRef<InstancedMesh>(null);
+  const petalRef3 = useRef<InstancedMesh>(null);
+  const petalRef4 = useRef<InstancedMesh>(null);
+  const petalRefs = useMemo(() => [petalRef0, petalRef1, petalRef2, petalRef3, petalRef4], []);
   const dummy = useMemo(() => new Object3D(), []);
   
   // Round-petal flowers (cup/dome shaped petals)
@@ -52,7 +51,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
     geom.translate(0, STEM_HEIGHT / 2, 0); // Pivot at bottom
     return geom;
   }, []);
-  const centerGeom = useMemo(() => new SphereGeometry(0.08, 8, 8), []);
+  const centerGeom = useMemo(() => new SphereGeometry(0.08, 5, 5), []);
   const petalGeom = useMemo(() => new SphereGeometry(0.12, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), []);
   
   // Materials
@@ -130,7 +129,7 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
         if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
       }
     });
-  }, [flowerData, dummy]);
+  }, [flowerData, dummy, petalRefs]);
   
   // Animate wind - base anchored, tops sway
   const frameRef = useRef(0);
@@ -215,16 +214,13 @@ export function InstancedFlowers({ plants, worldWidth, worldHeight }: InstancedP
 export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: InstancedPlantsProps) {
   const stemRef = useRef<InstancedMesh>(null);
   const centerRef = useRef<InstancedMesh>(null);
-  const petalRefs = [
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-    useRef<InstancedMesh>(null),
-  ];
+  const petalRef0 = useRef<InstancedMesh>(null);
+  const petalRef1 = useRef<InstancedMesh>(null);
+  const petalRef2 = useRef<InstancedMesh>(null);
+  const petalRef3 = useRef<InstancedMesh>(null);
+  const petalRef4 = useRef<InstancedMesh>(null);
+  const petalRef5 = useRef<InstancedMesh>(null);
+  const petalRefs = useMemo(() => [petalRef0, petalRef1, petalRef2, petalRef3, petalRef4, petalRef5], []);
   const dummy = useMemo(() => new Object3D(), []);
   
   // Flat-petal flowers (daisy, wildflower)
@@ -233,17 +229,26 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
     [plants]
   );
   
-  const STEM_HEIGHT = 0.7;
+  const STEM_HEIGHT = 0.525;
   
   // Geometries - flat disc petals
   const stemGeom = useMemo(() => {
-    const geom = new CylinderGeometry(0.008, 0.012, STEM_HEIGHT, 6);
+    const geom = new CylinderGeometry(0.006, 0.009, STEM_HEIGHT, 6);
     geom.translate(0, STEM_HEIGHT / 2, 0);
     return geom;
   }, []);
-  const centerGeom = useMemo(() => new SphereGeometry(0.06, 8, 8), []);
-  // Flat elliptical petal - thin disc
-  const petalGeom = useMemo(() => new CircleGeometry(0.08, 8), []);
+  // Flattened oval center (half size, squashed sphere)
+  const centerGeom = useMemo(() => {
+    const geom = new SphereGeometry(0.03, 6, 4);
+    geom.scale(1, 0.5, 1); // Flatten into oval
+    return geom;
+  }, []);
+  // Flat petal disc - pre-rotated to lie in XZ plane
+  const petalGeom = useMemo(() => {
+    const geom = new CircleGeometry(0.05, 12);
+    geom.rotateX(-Math.PI / 2); // Lay flat in XZ plane
+    return geom;
+  }, []);
   
   // Materials
   const stemMat = useMemo(() => new MeshStandardMaterial({ color: '#2d5a27', roughness: 0.8 }), []);
@@ -281,7 +286,7 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
     
     flowerData.forEach((f, i) => {
       const stemTop = STEM_HEIGHT * f.scale;
-      const headY = stemTop + 0.03 * f.scale;
+      const headY = stemTop;
       
       // Stem
       dummy.position.set(f.x, 0, f.z);
@@ -297,16 +302,17 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
       dummy.updateMatrix();
       centerRef.current!.setMatrixAt(i, dummy.matrix);
       
-      // 8 flat petals radiating outward
-      for (let p = 0; p < 8; p++) {
-        const angle = (p / 8) * Math.PI * 2;
-        const px = f.x + Math.cos(angle) * 0.1 * f.scale;
-        const pz = f.z + Math.sin(angle) * 0.1 * f.scale;
+      // 6 flat petals radiating outward (evenly distributed)
+      for (let p = 0; p < 6; p++) {
+        const angle = (p / 6) * Math.PI * 2;
+        const dist = 0.05 * f.scale;
+        const px = f.x + Math.cos(angle) * dist;
+        const pz = f.z + Math.sin(angle) * dist;
         
         dummy.position.set(px, headY, pz);
         dummy.scale.set(f.scale, f.scale, f.scale);
-        // Flat petals angled slightly upward, pointing outward
-        dummy.rotation.set(Math.PI / 2 - 0.3, 0, -angle + Math.PI / 2);
+        // Geometry is pre-rotated flat, just rotate Y to radiate from center
+        dummy.rotation.set(0, angle, 0);
         dummy.updateMatrix();
         petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
         petalRefs[p].current!.setColorAt(i, f.color);
@@ -321,7 +327,7 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
         if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
       }
     });
-  }, [flowerData, dummy]);
+  }, [flowerData, dummy, petalRefs]);
   
   // Animate wind
   const frameRef2 = useRef(0);
@@ -358,7 +364,7 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
       const tipLocalZ = stemTop * sinX;
       
       const headX = f.x + tipLocalX;
-      const headY = tipLocalY + 0.03 * f.scale;
+      const headY = tipLocalY;
       const headZ = f.z + tipLocalZ;
       
       // Center
@@ -368,14 +374,15 @@ export function InstancedFlatFlowers({ plants, worldWidth, worldHeight }: Instan
       centerRef.current!.setMatrixAt(i, dummy.matrix);
       
       // Petals follow center
-      for (let p = 0; p < 8; p++) {
-        const angle = (p / 8) * Math.PI * 2;
-        const px = headX + Math.cos(angle) * 0.1 * f.scale;
-        const pz = headZ + Math.sin(angle) * 0.1 * f.scale;
+      for (let p = 0; p < 6; p++) {
+        const angle = (p / 6) * Math.PI * 2;
+        const dist = 0.05 * f.scale;
+        const px = headX + Math.cos(angle) * dist;
+        const pz = headZ + Math.sin(angle) * dist;
         
         dummy.position.set(px, headY, pz);
         dummy.scale.set(f.scale, f.scale, f.scale);
-        dummy.rotation.set(Math.PI / 2 - 0.3, 0, -angle + Math.PI / 2);
+        dummy.rotation.set(0, angle, 0);
         dummy.updateMatrix();
         petalRefs[p].current!.setMatrixAt(i, dummy.matrix);
       }
@@ -409,8 +416,8 @@ export function InstancedMushrooms({ plants, worldWidth, worldHeight }: Instance
   
   const mushrooms = useMemo(() => plants.filter(p => p.type === 'mushroom'), [plants]);
   
-  const stemGeom = useMemo(() => new CylinderGeometry(0.04, 0.06, 0.3, 8), []);
-  const capGeom = useMemo(() => new SphereGeometry(0.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), []);
+  const stemGeom = useMemo(() => new CylinderGeometry(0.03, 0.045, 0.3, 8), []);
+  const capGeom = useMemo(() => new SphereGeometry(0.15, 6, 5, 0, Math.PI * 2, 0, Math.PI / 2), []);
   
   const stemMat = useMemo(() => new MeshStandardMaterial({ color: '#f5f5dc', roughness: 0.7 }), []);
   const capMat = useMemo(() => new MeshStandardMaterial({ roughness: 0.6 }), []);

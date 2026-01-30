@@ -25,7 +25,7 @@ function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: nu
 }
 
 export function InstancedBees({ creatures, worldWidth, worldHeight }: InstancedBeesProps) {
-  const bees = creatures.filter(c => c.type === 'bee');
+  const bees = useMemo(() => creatures.filter(c => c.type === 'bee'), [creatures]);
   const count = bees.length;
   
   // Refs for body parts

@@ -26,7 +26,7 @@ function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: nu
 }
 
 export function InstancedDragonflies({ creatures, worldWidth, worldHeight }: InstancedDragonfliesProps) {
-  const dragonflies = creatures.filter(c => c.type === 'dragonfly');
+  const dragonflies = useMemo(() => creatures.filter(c => c.type === 'dragonfly'), [creatures]);
   const count = dragonflies.length;
   
   // Refs for body parts

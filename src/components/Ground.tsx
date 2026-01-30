@@ -1,5 +1,10 @@
 import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Mesh, ShaderMaterial, Color, DoubleSide, UniformsLib, UniformsUtils } from 'three';
+
+interface GroundProps {
+  dayPhase?: number;
+}
 
 // Simplex noise GLSL functions
 const noiseGLSL = `
@@ -79,6 +84,7 @@ const fragmentShader = `
   uniform vec3 darkColor;
   uniform float noiseScale;
   uniform float patchScale;
+  uniform float dayPhase;
   
   varying vec2 vUv;
   varying vec3 vWorldPos;
@@ -114,6 +120,10 @@ const fragmentShader = `
     // Subtle fine variation
     color += (snoise(pos * 4.0) * 0.025);
     
+    // Day/night darkening - darker at night (dayPhase near 0 or 1)
+    float brightness = sin(dayPhase * 3.14159) * 0.3 + 0.7; // 0.7-1.0 range
+    color *= brightness;
+    
     // Apply shadows
     #ifdef USE_SHADOWMAP
       DirectionalLightShadow directionalShadow = directionalLightShadows[0];
@@ -132,11 +142,19 @@ const fragmentShader = `
   }
 `;
 
-export function Ground() {
+export function Ground({ dayPhase = 0.5 }: GroundProps) {
   const meshRef = useRef<Mesh>(null);
+  const materialRef = useRef<ShaderMaterial>(null);
+  
+  // Update dayPhase uniform
+  useFrame(() => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.dayPhase.value = dayPhase;
+    }
+  });
   
   const material = useMemo(() => {
-    return new ShaderMaterial({
+    const mat = new ShaderMaterial({
       uniforms: UniformsUtils.merge([
         UniformsLib.lights,
         {
@@ -144,6 +162,7 @@ export function Ground() {
           darkColor: { value: new Color('#4a4a38') },      // Darker brown-green patches
           noiseScale: { value: 2.0 },
           patchScale: { value: 0.4 },
+          dayPhase: { value: 0.5 },
         }
       ]),
       vertexShader,
@@ -151,6 +170,8 @@ export function Ground() {
       side: DoubleSide,
       lights: true,
     });
+    materialRef.current = mat;
+    return mat;
   }, []);
   
   return (

@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Color } from 'three';
 import { Ground } from './Ground';
-import { InstancedGrass } from './InstancedGrass';
+import { ShaderGrass } from './ShaderGrass';
 import { InstancedFlowers, InstancedFlatFlowers, InstancedMushrooms } from './InstancedPlants';
 import { InstancedMoss } from './InstancedMoss';
 import { InstancedSticks } from './InstancedSticks';
@@ -10,7 +10,6 @@ import { InstancedAnts, InstancedBugs, InstancedCaterpillars, InstancedButterfli
 import { InstancedDragonflies } from './InstancedDragonflies';
 import { InstancedBees } from './InstancedBees';
 import { InstancedRain } from './InstancedRain';
-import { InstancedFireflies } from './InstancedFireflies';
 import type { World } from '../world/types';
 
 interface SceneProps {
@@ -20,6 +19,13 @@ interface SceneProps {
 
 export function Scene({ world, rainOverride }: SceneProps) {
   const { scene } = useThree();
+  
+  // Defer creature loading for faster initial render
+  const [showCreatures, setShowCreatures] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCreatures(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
   
   // Determine if it's raining
   const isRaining = rainOverride === true || (rainOverride === null && world.weather === 'rain');
@@ -89,13 +95,13 @@ export function Scene({ world, rainOverride }: SceneProps) {
       />
       
       {/* Ground */}
-      <Ground />
+      <Ground dayPhase={world.dayPhase} />
       
       {/* Ground debris */}
       <InstancedSticks />
       
       {/* All plants use instancing for performance */}
-      <InstancedGrass 
+      <ShaderGrass 
         plants={world.plants} 
         worldWidth={world.width} 
         worldHeight={world.height} 
@@ -121,50 +127,51 @@ export function Scene({ world, rainOverride }: SceneProps) {
         worldHeight={world.height}
       />
       
-      {/* Instanced creatures */}
-      <InstancedAnts
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
-      <InstancedBugs
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
-      <InstancedCaterpillars
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
-      <InstancedButterflies
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
-      <InstancedSnails
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
-      <InstancedDragonflies
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
-      <InstancedBees
-        creatures={world.creatures}
-        worldWidth={world.width}
-        worldHeight={world.height}
-      />
+      {/* Instanced creatures - deferred 5s for faster initial load */}
+      {showCreatures && (
+        <>
+          <InstancedAnts
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+          <InstancedBugs
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+          <InstancedCaterpillars
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+          <InstancedButterflies
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+          <InstancedSnails
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+          <InstancedDragonflies
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+          <InstancedBees
+            creatures={world.creatures}
+            worldWidth={world.width}
+            worldHeight={world.height}
+          />
+        </>
+      )}
       
       {/* Instanced rain particles */}
       {(rainOverride === true || (rainOverride === null && world.weather === 'rain')) && (
         <InstancedRain />
       )}
-      
-      {/* Fireflies - only at dusk/night */}
-      <InstancedFireflies count={30} dayPhase={world.dayPhase} />
     </>
   );
 }

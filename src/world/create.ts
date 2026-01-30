@@ -21,7 +21,7 @@ const creatureColors: Record<Creature['type'], string[]> = {
   snail: ['#deb887', '#d2b48c', '#bc8f8f'],
   butterfly: ['#ffb6c1', '#87ceeb', '#dda0dd', '#f0e68c'],
   caterpillar: ['#7cb342', '#8bc34a', '#9ccc65', '#c5e1a5', '#ffeb3b'],
-  ant: ['#1a1a1a', '#2d1f1f', '#3d2b2b', '#4a3c3c'],
+  ant: ['#1d1d1d', '#332323', '#443030', '#524040'],
   dragonfly: ['#1e90ff', '#00ced1', '#32cd32', '#dc143c', '#4169e1', '#2f4f4f'], // Blue, cyan, green, red, royal blue, dark teal
   bee: ['#f4a020', '#e8a000', '#d4940a', '#c98a00'], // Golden yellow variants
 };
@@ -95,12 +95,12 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add butterflies - fluttering above the meadow
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 10; i++) {
     creatures.push(createCreature('butterfly', width, height));
   }
   
   // Add dragonflies - hovering and darting
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     creatures.push(createCreature('dragonfly', width, height));
   }
   
@@ -115,7 +115,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add ants - tiny and quick
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 50; i++) {
     creatures.push(createCreature('ant', width, height));
   }
   
@@ -135,7 +135,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add wildflowers
-  for (let i = 0; i < 45; i++) {
+  for (let i = 0; i < 35; i++) {
     plants.push(createPlant('wildflower', width, height));
   }
   
@@ -153,7 +153,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add grass patches - dense like real nature
-  for (let i = 0; i < 350; i++) {
+  for (let i = 0; i < 300; i++) {
     plants.push(createPlant('grass', width, height));
   }
   
@@ -179,7 +179,7 @@ export function createWorld(width: number, height: number): World {
   }
   
   // Add single grass blades scattered everywhere
-  for (let i = 0; i < 220; i++) {
+  for (let i = 0; i < 180; i++) {
     plants.push(createPlant('blade', width, height));
   }
   
@@ -251,7 +251,6 @@ export function createWorld(width: number, height: number): World {
     height,
     creatures,
     plants,
-    particles: [],
     time: 0,
     weather: 'clear',
     dayPhase: 0.35, // Start in early morning

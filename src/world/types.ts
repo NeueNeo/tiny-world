@@ -26,21 +26,11 @@ export interface Plant {
   age: number;
 }
 
-export interface Particle {
-  pos: Vector2;
-  vel: Vector2;
-  life: number;
-  maxLife: number;
-  size: number;
-  color: string;
-}
-
 export interface World {
   width: number;
   height: number;
   creatures: Creature[];
   plants: Plant[];
-  particles: Particle[];
   time: number;
   weather: 'clear' | 'rain' | 'windy';
   dayPhase: number; // 0-1, 0=midnight, 0.5=noon

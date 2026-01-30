@@ -19,5 +19,10 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // R3F/Three.js patterns require ref access during render and mutation in useFrame
+      'react-hooks/refs': 'off',
+      'react-hooks/immutability': 'off',
+    },
   },
 ])

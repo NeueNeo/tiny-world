@@ -1,9 +1,17 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { InstancedMesh, Object3D, Color, BufferGeometry, Float32BufferAttribute, MeshStandardMaterial, DoubleSide } from 'three';
+import { 
+  InstancedMesh, 
+  Object3D, 
+  Color, 
+  BufferGeometry, 
+  Float32BufferAttribute, 
+  ShaderMaterial,
+  DoubleSide
+} from 'three';
 import type { Plant } from '../world/types';
 
-interface InstancedGrassProps {
+interface ShaderGrassProps {
   plants: Plant[];
   worldWidth: number;
   worldHeight: number;
@@ -15,32 +23,84 @@ function toSceneCoords(x: number, y: number, worldWidth: number, worldHeight: nu
   return [sceneX, 0, sceneZ];
 }
 
-// Seeded random for consistent blade generation
 function seededRandom(seed: number) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
 
-export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGrassProps) {
+// Vertex shader - wind animation on GPU
+const vertexShader = `
+  uniform float uTime;
+  
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  varying float vHeight;
+  
+  void main() {
+    // Get instance matrix (position, rotation, scale)
+    mat4 instanceMat = instanceMatrix;
+    
+    // World position from instance matrix
+    vec3 worldPos = (instanceMat * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    
+    // Height factor - grass bends more at the top
+    float heightFactor = position.y;
+    vHeight = heightFactor;
+    
+    // Wind calculation - based on world position for spatial variation
+    float windStrength = sin(uTime * 1.2 + worldPos.x * 3.0 + worldPos.z * 2.0) * 0.08;
+    
+    // Apply wind displacement - increases with height
+    vec3 displaced = position;
+    displaced.x += windStrength * heightFactor * 0.5;
+    displaced.z += windStrength * heightFactor * 0.3;
+    
+    // Transform with instance matrix
+    vec4 mvPosition = modelViewMatrix * instanceMat * vec4(displaced, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+    
+    vNormal = normalMatrix * mat3(instanceMat) * normal;
+    vPosition = (modelMatrix * instanceMat * vec4(displaced, 1.0)).xyz;
+  }
+`;
+
+// Fragment shader - simple green with slight variation
+const fragmentShader = `
+  uniform vec3 uBaseColor;
+  uniform vec3 uTipColor;
+  
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  varying float vHeight;
+  
+  void main() {
+    // Mix base and tip color based on height
+    vec3 color = mix(uBaseColor, uTipColor, vHeight);
+    
+    // Simple directional light
+    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3));
+    float diff = max(dot(normalize(vNormal), lightDir), 0.0) * 0.5 + 0.5;
+    
+    gl_FragColor = vec4(color * diff, 1.0);
+  }
+`;
+
+export function ShaderGrass({ plants, worldWidth, worldHeight }: ShaderGrassProps) {
   const meshRef = useRef<InstancedMesh>(null);
   const dummy = useMemo(() => new Object3D(), []);
   
-  // Shared geometry and material - pivot at bottom so rotation anchors the base
-  // Tapered blade: wide at bottom, narrow at top
+  // Tapered blade geometry
   const geometry = useMemo(() => {
     const geom = new BufferGeometry();
     
-    const bottomWidth = 0.022;
-    const topWidth = 0.0074; // 3x thinner at top
+    const bottomWidth = 0.0242;  // +10%
+    const topWidth = 0.0081;    // +10%
     const height = 1;
     
-    // Two triangles forming a tapered quad
     const vertices = new Float32Array([
-      // First triangle (bottom-left, bottom-right, top-right)
       -bottomWidth / 2, 0, 0,
        bottomWidth / 2, 0, 0,
        topWidth / 2, height, 0,
-      // Second triangle (bottom-left, top-right, top-left)
       -bottomWidth / 2, 0, 0,
        topWidth / 2, height, 0,
       -topWidth / 2, height, 0,
@@ -56,13 +116,20 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
     
     return geom;
   }, []);
-  const material = useMemo(() => new MeshStandardMaterial({ 
-    color: '#228b22', 
-    roughness: 0.85,
+  
+  // Shader material with uniforms
+  const material = useMemo(() => new ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uBaseColor: { value: new Color('#1a6b1a') },
+      uTipColor: { value: new Color('#3cb371') },
+    },
+    vertexShader,
+    fragmentShader,
     side: DoubleSide,
   }), []);
   
-  // Cleanup on unmount
+  // Cleanup
   useEffect(() => {
     return () => {
       geometry.dispose();
@@ -70,74 +137,64 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
     };
   }, [geometry, material]);
   
-  // Calculate total instances needed
+  // Calculate instances
   const grassPlants = useMemo(() => plants.filter(p => p.type === 'grass'), [plants]);
   const bladePlants = useMemo(() => plants.filter(p => p.type === 'blade'), [plants]);
-  
   const bladesPerClump = 8;
   const totalInstances = grassPlants.length * bladesPerClump + bladePlants.length;
   
-  // Pre-calculate all blade data
+  // Pre-calculate blade data (static - no animation data needed)
   const bladeData = useMemo(() => {
-    const data: { x: number; y: number; z: number; height: number; rotY: number; lean: number; color: Color }[] = [];
+    const data: { x: number; z: number; height: number; rotY: number; lean: number }[] = [];
     
-    // Grass clumps
     grassPlants.forEach((plant, plantIdx) => {
       const [px, , pz] = toSceneCoords(plant.pos.x, plant.pos.y, worldWidth, worldHeight);
       const scale = plant.size / 1.5;
-      const baseColor = new Color(plant.color);
       
       for (let i = 0; i < bladesPerClump; i++) {
         const seed = plantIdx * 100 + i;
         const angle = (i / bladesPerClump) * Math.PI * 2 + seededRandom(seed) * 0.5;
         const dist = seededRandom(seed + 1) * 0.08;
-        // 25% of grass is shorter
         const isShort = seededRandom(seed + 5) < 0.25;
         const heightMult = isShort ? 0.5 : 1.0;
         const height = (0.15 + seededRandom(seed + 2) * 0.35) * scale * heightMult;
         
         data.push({
           x: px + Math.cos(angle) * dist * scale,
-          y: 0, // Base at ground level
           z: pz + Math.sin(angle) * dist * scale,
           height,
           rotY: seededRandom(seed + 3) * Math.PI,
           lean: (seededRandom(seed + 4) - 0.5) * 0.4,
-          color: baseColor,
         });
       }
     });
     
-    // Single blades
     bladePlants.forEach((plant, plantIdx) => {
       const [px, , pz] = toSceneCoords(plant.pos.x, plant.pos.y, worldWidth, worldHeight);
       const scale = plant.size / 1.2;
       const seed = plantIdx * 1000;
-      // 25% of blades are shorter
       const isShort = seededRandom(seed + 5) < 0.25;
       const heightMult = isShort ? 0.5 : 1.0;
       const height = (0.2 + seededRandom(seed) * 0.4) * scale * heightMult;
       
       data.push({
         x: px,
-        y: 0, // Base at ground level
         z: pz,
         height,
         rotY: 0,
         lean: (seededRandom(seed + 1) - 0.5) * 0.5,
-        color: new Color(plant.color),
       });
     });
     
     return data;
   }, [grassPlants, bladePlants, worldWidth, worldHeight]);
   
-  // Set initial positions
+  // Set transforms ONCE - no per-frame updates needed
   useEffect(() => {
     if (!meshRef.current) return;
     
     bladeData.forEach((blade, i) => {
-      dummy.position.set(blade.x, blade.y, blade.z);
+      dummy.position.set(blade.x, 0, blade.z);
       dummy.rotation.set(0, blade.rotY, blade.lean);
       dummy.scale.set(1, blade.height, 1);
       dummy.updateMatrix();
@@ -147,29 +204,9 @@ export function InstancedGrass({ plants, worldWidth, worldHeight }: InstancedGra
     meshRef.current.instanceMatrix.needsUpdate = true;
   }, [bladeData, dummy]);
   
-  // Animate wind - rotation from base means gentler angles for natural sway
-  // Skip every other frame to reduce load
-  const frameRef = useRef(0);
+  // Only update time uniform - no matrix updates!
   useFrame((state) => {
-    frameRef.current++;
-    if (frameRef.current % 2 !== 0) return; // 30fps animation
-    if (!meshRef.current) return;
-    
-    const time = state.clock.elapsedTime;
-    const len = bladeData.length;
-    
-    for (let i = 0; i < len; i++) {
-      const blade = bladeData[i];
-      const wind = Math.sin(time * 1.2 + blade.x * 3 + blade.z * 2) * 0.08;
-      
-      dummy.position.set(blade.x, blade.y, blade.z);
-      dummy.rotation.set(wind * 0.2, blade.rotY, blade.lean + wind);
-      dummy.scale.set(1, blade.height, 1);
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
-    }
-    
-    meshRef.current.instanceMatrix.needsUpdate = true;
+    material.uniforms.uTime.value = state.clock.elapsedTime;
   });
   
   if (totalInstances === 0) return null;
